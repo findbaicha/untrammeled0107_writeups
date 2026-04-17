@@ -2,10 +2,10 @@
 const WP_LIST = [
   { title: "[Web] BUUCTF Love_SQL", cat: "web", date: "2026-4-16", read: "3 min", path: "wps/web/buulovesql/love_sql.html" },
   { title: "[Web] BUUCTF 随便注", cat: "web", date: "2026-4-16", read: "3 min", path: "wps/web/buusuibianzhu/suibianzhu.html" },
-  { title: "[Pwn] Stack Buffer Overflow", cat: "pwn", date: "2025-12-28", read: "5 min", path: "wps/pwn/stack.html" },
-  { title: "[Reverse] CrackMe Simple", cat: "reverse", date: "2025-12-25", read: "4 min", path: "wps/reverse/crackme.html" },
-  { title: "[Misc] Image Stego", cat: "misc", date: "2025-12-20", read: "2 min", path: "wps/misc/stego.html" },
-  { title: "[Crypto] RSA Easy", cat: "crypto", date: "2025-12-18", read: "3 min", path: "wps/crypto/rsa.html" },
+  { title: "[Pwn] 敬请期待", cat: "pwn", date: "2025-12-28", read: "5 min", path: "wps/pwn/stack.html" },
+  { title: "[Reverse] 敬请期待", cat: "reverse", date: "2025-12-25", read: "4 min", path: "wps/reverse/crackme.html" },
+  { title: "[Misc] 敬请期待", cat: "misc", date: "2025-12-20", read: "2 min", path: "wps/misc/stego.html" },
+  { title: "[Crypto] 敬请期待", cat: "crypto", date: "2025-12-18", read: "3 min", path: "wps/crypto/rsa.html" },
 ];
 
 // 渲染
