@@ -1,79 +1,133 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-scheme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[Web] CTFShow Base64Encode | Untrammeled0107</title>
+  <title>[Web] Base64Encode | CTF WP</title>
   <link rel="stylesheet" href="../../../../style.css">
+  <style>
+    html[data-scheme="dark"] {
+      --body-bg: #121212 !important;
+      --card-bg: #1e1e1e !important;
+      --text-primary: #e0e0e0 !important;
+      --text-secondary: #a0a0a0 !important;
+      --border-color: #333 !important;
+      --accent: #5d87ff !important;
+    }
+    .wp-content {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 2.5rem;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+    }
+    .wp-title {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+    .wp-meta {
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+      display: flex;
+      gap: 1rem;
+    }
+    .wp-section {
+      margin: 2.5rem 0;
+    }
+    .wp-section h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+      border-left: 4px solid var(--accent);
+      padding-left: 0.8rem;
+    }
+    pre {
+      background: #1a1a1a !important;
+      color: #dcdcaa !important;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      border: 1px solid #444 !important;
+    }
+    .back-home {
+      display: inline-block;
+      margin-bottom: 2rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .wp-img {
+      width: 100%;
+      border-radius: 8px;
+      margin: 1.2rem 0;
+      box-shadow: 0 0 12px rgba(0,0,0,0.3);
+    }
+  </style>
 </head>
 <body>
-  <div class="container main-container flex on-phone--column">
-    <!-- 左侧边栏 -->
-    <aside class="sidebar left-sidebar sticky">
-      <button class="hamburger" id="toggle-menu">
-        <span class="hamburger-box"><span class="hamburger-inner"></span></span>
-      </button>
-      <header>
-        <figure class="site-avatar">
-          <a href="../../../../index.html"><img src="../../../../logo.png" width="100" height="100"></a>
-        </figure>
-        <div class="site-meta">
-          <h1 class="site-name">Untrammeled0107</h1>
-          <h2 class="site-description">Leader OF N0N-7r4mm313d IN HK</h2>
-        </div>
-      </header>
-      <ol class="menu">
-        <li><a href="../../../../index.html">🏠 Home</a></li>
-        <li><a href="../../../../competitions.html">📝 赛事WP</a></li>
-      </ol>
-    </aside>
-
-    <!-- 主内容 -->
-    <main class="main full-width">
-      <div class="article-content">
-        <h1 class="article-title">[Web] CTFShow Base64Encode 解题WP</h1>
-        <div class="article-meta">
-          <span class="article-tag">Web</span>
-          <span>CTFShow</span>
-          <span>2026-4-16</span>
-        </div>
-        <hr>
-
-        <h2>🔍 解题步骤</h2>
-        <p>访问题目，看到登录界面：</p>
-        <img src="./0.png" style="max-width:100%;border-radius:8px;margin:10px 0;">
-        
-        <p>查看网页源代码，发现前端JS密码校验逻辑：</p>
-        <pre><code>&lt;script&gt;
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-    
-        const correctPassword = "Q1RGe2Vhc3lfYmFzZTY0fQ==";
-        const enteredPassword = document.getElementById('password').value;
-        const messageElement = document.getElementById('message');
-        
-        if (btoa(enteredPassword) === correctPassword) {
-            messageElement.textContent = "Login successful! Flag: "+enteredPassword;
-            messageElement.className = "message success";
-        } else {
-            messageElement.textContent = "Login failed! Incorrect password.";
-            messageElement.className = "message error";
-        }
-    });
-&lt;/script&gt;</code></pre>
-
-        <p>代码中 <code>btoa()</code> 是Base64编码，将密文解码得到真实密码：</p>
-        <img src="./1.png" style="max-width:100%;border-radius:8px;margin:10px 0;">
-
-        <p>输入密码登录，获取Flag：</p>
-        <img src="./2.png" style="max-width:100%;border-radius:8px;margin:10px 0;">
-
-        <h2>🚩 最终Flag</h2>
-        <div style="padding:10px;background:#222;color:#0f0;border-radius:5px;font-weight:bold;">
-          CTF{easy_base64}
-        </div>
+<div class="container">
+  <main class="main full-width">
+    <div class="wp-content">
+      <a href="../../../../index.html" class="back-home">← 返回主页</a>
+      <h1 class="wp-title">[Web] Base64Encode</h1>
+      <div class="wp-meta">
+        <span>分类：Web 前端验证 / Base64解码</span>
+        <span>难度：简单</span>
+        <span>时间：2026-04-16</span>
       </div>
-    </main>
-  </div>
+
+      <div class="wp-section">
+        <h2>0x01 题目环境</h2>
+        <p>打开页面看到登录界面，存在密码输入框。</p>
+        <img src="0.png" class="wp-img" alt="">
+      </div>
+
+      <div class="wp-section">
+        <h2>0x02 查看网页源代码</h2>
+        <p>F12查看源码，发现前端JavaScript密码校验逻辑：</p>
+        <pre>&lt;script&gt;
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const correctPassword = "Q1RGe2Vhc3lfYmFzZTY0fQ==";
+    const enteredPassword = document.getElementById('password').value;
+    const messageElement = document.getElementById('message');
+    
+    if (btoa(enteredPassword) === correctPassword) {
+        messageElement.textContent = "Login successful! Flag: "+enteredPassword;
+        messageElement.className = "message success";
+    } else {
+        messageElement.textContent = "Login failed! Incorrect password.";
+        messageElement.className = "message error";
+    }
+});
+&lt;/script&gt;</pre>
+      </div>
+
+      <div class="wp-section">
+        <h2>0x03 Base64解码分析</h2>
+        <p>代码中 `btoa()` 为JavaScript原生Base64编码函数，将编码后的字符串解码：</p>
+        <pre>编码字符串：Q1RGe2Vhc3lfYmFzZTY0fQ==
+解码结果：CTF{easy_base64}</pre>
+        <img src="1.png" class="wp-img" alt="">
+      </div>
+
+      <div class="wp-section">
+        <h2>0x04 登录获取Flag</h2>
+        <p>将解码后的密码输入登录框，提交验证。</p>
+        <img src="2.png" class="wp-img" alt="">
+      </div>
+
+      <div class="wp-section">
+        <h2>0x05 Flag</h2>
+        <pre>CTF{easy_base64}</pre>
+      </div>
+
+    </div>
+  </main>
+</div>
 </body>
 </html>
