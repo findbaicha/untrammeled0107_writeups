@@ -38,3 +38,7 @@ ctf-show-brower
 把user-agent改成ctf-show-browser
 "/../../3.png"
 execute一波
+看到回显有flag
+"/../../4.png"
+得到flag
+CTF{user_agent_inject_success}

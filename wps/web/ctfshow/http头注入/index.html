@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scheme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Web] Base64Encode | CTF WP</title>
+  <link rel="stylesheet" href="../../../../style.css">
+  <style>
+    html[data-scheme="dark"] {
+      --body-bg: #121212 !important;
+      --card-bg: #1e1e1e !important;
+      --text-primary: #e0e0e0 !important;
+      --text-secondary: #a0a0a0 !important;
+      --border-color: #333 !important;
+      --accent: #5d87ff !important;
+    }
+    .wp-content {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 2.5rem;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+    }
+    .wp-title {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+    .wp-meta {
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+      display: flex;
+      gap: 1rem;
+    }
+    .wp-section {
+      margin: 2.5rem 0;
+    }
+    .wp-section h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+      border-left: 4px solid var(--accent);
+      padding-left: 0.8rem;
+    }
+    pre {
+      background: #1a1a1a !important;
+      color: #dcdcaa !important;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      border: 1px solid #444 !important;
+    }
+    .back-home {
+      display: inline-block;
+      margin-bottom: 2rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .wp-img {
+      width: 100%;
+      border-radius: 8px;
+      margin: 1.2rem 0;
+      box-shadow: 0 0 12px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <main class="main full-width">
+    <div class="wp-content">
+      <a href="../../../../index.html" class="back-home">← 返回主页</a>
+      <h1 class="wp-title">[Web] Base64Encode</h1>
+      <div class="wp-meta">
+        <span>分类：Web 前端验证 / User-Agent 绕过</span>
+        <span>难度：简单</span>
+        <span>时间：2026-04-16</span>
+      </div>
+
+      <div class="wp-section">
+        <h2>0x01 题目界面</h2>
+        <p>可以看到是一个登录界面</p>
+        <img src="0.png" class="wp-img" alt="">
+      </div>
+
+      <div class="wp-section">
+        <h2>0x02 查看源代码</h2>
+        <p>有个javascript显示了他的密码检测逻辑</p>
+        <pre>&lt;script&gt;
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+    
+        const correctPassword = "Q1RGe2Vhc3lfYmFzZTY0fQ==";
+        const enteredPassword = document.getElementById('password').value;
+        const messageElement = document.getElementById('message');
+        
+        if (btoa(enteredPassword) === correctPassword) {
+            messageElement.textContent = "Login successful! Flag: "+enteredPassword;
+            messageElement.className = "message success";
+        } else {
+            messageElement.textContent = "Login failed! Incorrect password.";
+            messageElement.className = "message error";
+        }
+    });
+&lt;/script&gt;</pre>
+        <p>可以发现是base64</p>
+        <p>那就cyberchef解码一下</p>
+        <img src="1.png" class="wp-img" alt="">
+        <p>得到密码</p>
+        <pre>CTF{easy_base64}</pre>
+        <p>贴到题目登录页</p>
+      </div>
+
+      <div class="wp-section">
+        <h2>0x03 得到回显</h2>
+        <pre>Invalid User-Agent
+You must use "ctf-show-brower" browser to access this page</pre>
+        <img src="2.png" class="wp-img" alt="">
+        <p>发现需要伪造你的user-agent也就是浏览器信息</p>
+        <p>改成</p>
+        <pre>ctf-show-brower</pre>
+        <p>那就开hackbar改request</p>
+        <p>把user-agent改成ctf-show-browser</p>
+        <img src="3.png" class="wp-img" alt="">
+      </div>
+
+      <div class="wp-section">
+        <h2>0x04 获取 Flag</h2>
+        <p>execute一波</p>
+        <p>看到回显有flag</p>
+        <img src="4.png" class="wp-img" alt="">
+        <p>得到flag</p>
+      </div>
+
+      <div class="wp-section">
+        <h2>0x05 Flag</h2>
+        <pre>CTF{user_agent_inject_success}</pre>
+      </div>
+
+    </div>
+  </main>
+</div>
+</body>
+</html>
