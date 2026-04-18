@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scheme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Reverse] MoeCTF 窗口闪退RC4 | WP</title>
+  <style>
+    html[data-scheme="dark"] {
+      --body-bg: #121212;
+      --card-bg: #1e1e1e;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --border-color: #333;
+      --accent: #5d87ff;
+    }
+    body {
+      background: var(--body-bg);
+      color: var(--text-primary);
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 2rem 1rem;
+    }
+    .wp-content {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .wp-title {
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+    }
+    .wp-meta {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .wp-section {
+      margin: 2rem 0;
+    }
+    .wp-section h2 {
+      font-size: 1.2rem;
+      border-left: 3px solid var(--accent);
+      padding-left: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    /* 代码块样式 */
+    .ide {
+      background: #1a1a1a;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0;
+      border: 1px solid #444;
+      overflow-x: auto;
+    }
+    .ide pre {
+      margin: 0;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      color: #dcdcaa;
+      line-height: 1.3;
+      white-space: pre;
+    }
+
+    /* 行号样式 */
+    .line {
+      display: block;
+      white-space: pre;
+    }
+    .line::before {
+      content: attr(data-line);
+      display: inline-block;
+      min-width: 2.2em;
+      text-align: right;
+      padding-right: 0.8em;
+      margin-right: 0.8em;
+      color: #777;
+      border-right: 1px solid #333;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wp-content">
+  <h1 class="wp-title">[Reverse] MoeCTF 窗口闪退RC4解密</h1>
+  <div class="wp-meta">
+    <span>Reverse / RC4 / Windows窗口</span>
+    <span>难度：中等</span>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x01 题目初步分析</h2>
+    <p>尝试运行exe发现不行，那就ida反编译分析一下</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x02 分析 WinMainCRTStartup</h2>
+    <p>从WinMainCRTStartup开始分析</p>
+    <div class="ide"><pre>__int64 WinMainCRTStartup()
+{
+  *(_DWORD *)refptr___mingw_app_type = 1;
+  return _tmainCRTStartup();
+}</pre></div>
+    <p>发现会return到_tmainCRTStartup</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x03 分析 _tmainCRTStartup</h2>
+    <p>那就双击过去来分析一下_tmainCRTStartup</p>
+    <div class="ide"><pre>int _tmainCRTStartup()
+{
+  PVOID StackBase; // rsi
+  signed __int64 v1; // rax
+  _DWORD *v2; // rsi
+  int v3; // edi
+  int v4; // ebx
+  size_t v5; // rdi
+  char **v6; // rax
+  char **v7; // rbp
+  char **v8; // r12
+  size_t v9; // rdi
+  unsigned __int64 v10; // rbx
+  size_t v11; // rsi
+  char *v12; // rax
+  char *v13; // rdx
+  char **v14; // rdi
+  const char **v15; // r8
+  int v16; // ecx
+  int result; // eax
+
+  StackBase = NtCurrentTeb()->NtTib.StackBase;
+  while ( 1 )
+  {
+    v1 = _InterlockedCompareExchange64(
+           (volatile signed __int64 *)refptr___native_startup_lock,
+           (signed __int64)StackBase,
+           0);
+    if ( !v1 )
+    {
+      v2 = refptr___native_startup_state;
+      v3 = 0;
+      if ( *(_DWORD *)refptr___native_startup_state == 1 )
+        goto LABEL_20;
+      goto LABEL_6;
+    }
+    if ( StackBase == (PVOID)v1 )
+      break;
+    Sleep(0x3E8u);
+  }
+  v2 = refptr___native_startup_state;
+  v3 = 1;
+  if ( *(_DWORD *)refptr___native_startup_state == 1 )
+  {
+LABEL_20:
+    amsg_exit(31);
+    if ( *v2 == 1 )
+      goto LABEL_21;
+LABEL_9:
+    if ( v3 )
+      goto LABEL_10;
+    goto LABEL_22;
+  }
+LABEL_6:
+  if ( *v2 )
+  {
+    has_cctor = 1;
+  }
+  else
+  {
+    *v2 = 1;
+    initterm(refptr___xi_a, refptr___xi_z);
+  }
+  if ( *v2 != 1 )
+    goto LABEL_9;
+LABEL_21:
+  initterm(refptr___xc_a, refptr___xc_z);
+  *v2 = 2;
+  if ( v3 )
+    goto LABEL_10;
+LABEL_22:
+  _InterlockedExchange64((volatile __int64 *)refptr___native_startup_lock, 0);
+LABEL_10:
+  if ( *refptr___dyn_tls_init_callback )
+    ((void (__fastcall *)(_QWORD, __int64, _QWORD))*refptr___dyn_tls_init_callback)(0, 2, 0);
+  pei386_runtime_relocator();
+  *refptr___mingw_oldexcpt_handler = (__int64)SetUnhandledExceptionFilter(refptr__gnu_exception_handler);
+  set_invalid_parameter_handler_0(_mingw_invalidParameterHandler);
+  fpreset();
+  v4 = argc;
+  v5 = 8LL * (argc + 1);
+  v6 = (char **)malloc_0(v5);
+  v7 = argv;
+  v8 = v6;
+  if ( v4 <= 0 )
+  {
+    v14 = v6;
+  }
+  else
+  {
+    v9 = v5 - 8;
+    v10 = 0;
+    do
+    {
+      v11 = strlen(v7[v10 / 8]) + 1;
+      v12 = (char *)malloc_0(v11);
+      v8[v10 / 8] = v12;
+      v13 = v7[v10 / 8];
+      v10 += 8LL;
+      memcpy_0(v12, v13, v11);
+    }
+    while ( v9 != v10 );
+    v14 = (char **)((char *)v8 + v9);
+  }
+  *v14 = 0;
+  argv = v8;
+  _main();
+  v15 = (const char **)envp;
+  v16 = argc;
+  *(_QWORD *)*refptr___imp___initenv = envp;
+  result = main(v16, (const char **)argv, v15);
+  mainret = result;
+  if ( !managedapp )
+    exit_0(result);
+  if ( !has_cctor )
+  {
+    cexit_0();
+    return mainret;
+  }
+  return result;
+}</pre></div>
+    <p>在111行发现</p>
+    <div class="ide"><pre>result = main(v16, (const char **)argv, v15);</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x04 分析 main 函数</h2>
+    <p>那就要从main下手看看算法逻辑了 那就双击过去</p>
+    <div class="ide"><pre>int __fastcall main(int argc, const char **argv, const char **envp)
+{
+  char v3; // si
+  char *v4; // rbx
+  unsigned int v5; // ecx
+  char v6; // al
+  int wShowWindow; // r9d
+  struct _STARTUPINFOA StartupInfo; // [rsp+20h] [rbp-88h] BYREF
+
+  v3 = 0;
+  _main(argc, argv, envp);
+  v4 = *_p__acmdln_0();
+  if ( v4 )
+  {
+    while ( 1 )
+    {
+      v5 = *v4;
+      if ( *v4 <= 32 )
+      {
+        if ( !(_BYTE)v5 )
+          goto LABEL_15;
+        if ( (v3 & 1) == 0 )
+        {
+          do
+            v6 = *++v4;
+          while ( v6 && v6 <= 32 );
+          goto LABEL_15;
+        }
+        v3 = 1;
+      }
+      else if ( (_BYTE)v5 == 34 )
+      {
+        v3 ^= 1u;
+      }
+      if ( ismbblead_0(v5) )
+        v4 += -(v4[1] == 0) + 1;
+      ++v4;
+    }
+  }
+  v4 = (char *)&unk_140005010;
+LABEL_15:
+  memset(&StartupInfo, 0, sizeof(StartupInfo));
+  GetStartupInfoA(&StartupInfo);
+  wShowWindow = 10;
+  if ( (StartupInfo.dwFlags & 1) != 0 )
+    wShowWindow = StartupInfo.wShowWindow;
+  return WinMain((HINSTANCE)refptr___ImageBase, 0, v4, wShowWindow);
+}</pre></div>
+    <p>在47行发现一个线索</p>
+    <div class="ide"><pre>return WinMain((HINSTANCE)refptr___ImageBase, 0, v4, wShowWindow);</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x05 分析 WinMain 窗口逻辑</h2>
+    <p>真正的算法其实在一个叫WinMain的函数</p>
+    <p>那就双击过去</p>
+    <div class="ide"><pre>int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+{
+  MSG Msg; // [rsp+60h] [rbp-20h] BYREF
+  WNDCLASSA WndClass; // [rsp+90h] [rbp+10h] BYREF
+  CHAR ClassName[24]; // [rsp+E0h] [rbp+60h] BYREF
+  HWND hWnd; // [rsp+F8h] [rbp+78h]
+
+  strcpy(ClassName, "Sample Window Class");
+  memset(&WndClass, 0, sizeof(WndClass));
+  WndClass.lpfnWndProc = (WNDPROC)WndProc;
+  WndClass.hInstance = hInstance;
+  WndClass.lpszClassName = ClassName;
+  RegisterClassA(&WndClass);
+  hWnd = CreateWindowExA(0, ClassName, "moectf 2025", 0xCA0000u, 0x80000000, 0x80000000, 400, 100, 0, 0, hInstance, 0);
+  if ( !hWnd )
+    return 0;
+  ShowWindow(hWnd, nShowCmd);
+  UpdateWindow(hWnd);
+  Sleep(1u);
+  DestroyWindow(hWnd);
+  memset(&Msg, 0, sizeof(Msg));
+  while ( GetMessageA(&Msg, 0, 0, 0) > 0 )
+  {
+    TranslateMessage(&Msg);
+    DispatchMessageA(&Msg);
+  }
+  return 0;
+}</pre></div>
+    <p>可以发现代码在创建并显示窗口后紧接着执行了Sleep(1u); 然后直接DestroyWindow(hWnd);</p>
+    <p>这意味着这个程序运行后窗口只会闪烁一下（或者根本看不见）就被销毁了</p>
+    <p>但这并不意味着线索断了</p>
+    <p>看到第10行</p>
+    <div class="ide"><pre>WndClass.lpfnWndProc = (WNDPROC)WndProc;</pre></div>
+    <p>这里的WndProc就是负责处理这道题核心逻辑的函数</p>
+    <p>既然窗口被秒关，那么出题人极大概率把生成Flag或者验证的逻辑写在了WndProc</p>
+    <p>收到WM_CREATE（窗口创建）或者WM_DESTROY（窗口销毁）消息时的处理代码中</p>
+    <p>那就双击到WndCProc去看看有什么线索</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x06 核心函数 WndProc 分析</h2>
+    <div class="ide"><pre>LRESULT __fastcall WndProc(HWND a1, UINT a2, WPARAM a3, LPARAM a4)
+{
+  struct tagPAINTSTRUCT Paint; // [rsp+30h] [rbp-50h] BYREF
+  char Destination[14]; // [rsp+80h] [rbp+0h] BYREF
+  __int16 v7; // [rsp+8Eh] [rbp+Eh]
+  __int64 v8; // [rsp+90h] [rbp+10h]
+  __int64 v9; // [rsp+98h] [rbp+18h]
+  __int64 v10; // [rsp+A0h] [rbp+20h]
+  __int64 v11; // [rsp+A8h] [rbp+28h]
+  __int64 v12; // [rsp+B0h] [rbp+30h]
+  __int64 v13; // [rsp+B8h] [rbp+38h]
+  __int64 v14; // [rsp+C0h] [rbp+40h]
+  __int64 v15; // [rsp+C8h] [rbp+48h]
+  __int64 v16; // [rsp+D0h] [rbp+50h]
+  __int64 v17; // [rsp+D8h] [rbp+58h]
+  __int64 v18; // [rsp+E0h] [rbp+60h]
+  __int64 v19; // [rsp+E8h] [rbp+68h]
+  __int64 v20; // [rsp+F0h] [rbp+70h]
+  __int64 v21; // [rsp+F8h] [rbp+78h]
+  struct tagRECT Rect; // [rsp+100h] [rbp+80h] BYREF
+  char v23[13]; // [rsp+113h] [rbp+93h] BYREF
+  char Str[8]; // [rsp+120h] [rbp+A0h] BYREF
+  __int64 v25; // [rsp+128h] [rbp+A8h]
+  _QWORD v26[2]; // [rsp+130h] [rbp+B0h]
+  int v27; // [rsp+140h] [rbp+C0h]
+  int v28; // [rsp+144h] [rbp+C4h]
+  HDC hdc; // [rsp+148h] [rbp+C8h]
+
+  if ( a2 == 2 )
+  {
+    PostQuitMessage(0);
+    return 0;
+  }
+  else if ( a2 == 15 )
+  {
+    hdc = BeginPaint(a1, &Paint);
+    strcpy(Destination, "Your flag is ");
+    v7 = 0;
+    v8 = 0;
+    v9 = 0;
+    v10 = 0;
+    v11 = 0;
+    v12 = 0;
+    v13 = 0;
+    v14 = 0;
+    v15 = 0;
+    v16 = 0;
+    v17 = 0;
+    v18 = 0;
+    v19 = 0;
+    v20 = 0;
+    v21 = 0;
+    *(_QWORD *)Str = 0x7F1B3E885EF9160LL;
+    v25 = 0x2CD336BCB0464A89LL;
+    v26[0] = 0xEF5FC91642917EE1uLL;
+    *(_QWORD *)((char *)v26 + 6) = 0x739D40A4E356EF5FLL;
+    strcpy(v23, "mylittlepony");
+    v28 = 12;
+    v27 = strlen(Str);
+    RC4Crypt((unsigned __int8 *)Str, v27, (const unsigned __int8 *)v23, 12);
+    strcat_0(Destination, Str);
+    GetClientRect(a1, &Rect);
+    DrawTextA(hdc, Destination, -1, &Rect, 0x40005u);
+    EndPaint(a1, &Paint);
+    return 0;
+  }
+  else
+  {
+    return DefWindowProcA(a1, a2, a3, a4);
+  }
+}</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x07 核心逻辑解析</h2>
+    <p>可以看到后半部分有一个条件语句if 我们来分析一下</p>
+    <p>当a2 == 15时（15在Windows API中对应的是WM_PAINT消息，也就是窗口尝试绘制自己的画面时触发），程序执行了真正的核心逻辑</p>
+    <p>1. 37行准备输出格式strcpy(Destination, "Your flag is ");</p>
+    <p>2. 53-56行通过一大堆赋值语句，把一串看似随机的16进制数塞进了Str及其相邻的内存空间（v25, v26）</p>
+    <p>3. 57行strcpy(v23, "mylittlepony"); —— 你的密钥是mylittlepony，长度是 12</p>
+    <p>4. 60行RC4Crypt((unsigned __int8 *)Str, v27, (const unsigned __int8 *)v23, 12); —— 调用了标准的RC4算法，使用密钥对Str中的密文进行解密</p>
+    <p>5. 61行strcat_0(Destination, Str); 将解密出来的Flag拼接到"Your flag is "后面，然后调用DrawTextA画在那个“闪退”的窗口上</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x08 密文提取与小端序处理</h2>
+    <p>那么现在逆向完了 那就分析一下flag怎么来的把</p>
+    <p>在逆向工程中，提取这种在代码里硬编码的数据要注意小端序的问题</p>
+    <p>数据在内存中是倒着存的</p>
+    <p>把密文从这些__int64常量中提取出来</p>
+    <p>0x7F1B3E885EF9160LL (补齐8字节为 0x07F1B3E885EF9160) -> 60 91 EF 85 E8 B3 F1 07</p>
+    <p>0x2CD336BCB0464A89LL -> 89 4A 46 B0 BC 36 D3 2C</p>
+    <p>0xEF5FC91642917EE1uLL -> E1 7E 91 42 16 C9 5F EF</p>
+    <p>注意v26 + 6这里发生了内存重叠覆盖：0x739D40A4E356EF5FLL -> 5F EF 56 E3 A4 40 9D 73 (刚好覆盖了上面的5F EF，完美衔接)。</p>
+    <p>完整的密文 (Hex格式) 为</p>
+    <div class="ide"><pre>6091ef85e8b3f107894a46b0bc36d32ce17e914216c95fef56e3a4409d73</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x09 RC4 解密脚本</h2>
+    <p>那就直接rc4 decode解码一波</p>
+    <p>写python</p>
+    <div class="ide"><pre>from Crypto.Cipher import ARC4
+cipher = ARC4.new(b"mylittlepony") #定义rc4加密对象密钥为"mylittlepony"
+print(cipher.decrypt(bytes.fromhex("6091ef85e8b3f107894a46b0bc36d32ce17e914216c95fef56e3a4409d73")).decode('utf-8')) #解密密文并输出明文</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x0A 最终 Flag</h2>
+    <p>python直接输出</p>
+    <div class="ide"><pre>moectf{Just_dyn@mic_d3bugg1ng}</pre></div>
+  </div>
+</div>
+
+<script>
+// 自动给所有 .ide pre 分行加行号
+document.querySelectorAll('.ide pre').forEach(pre => {
+  const lines = pre.textContent.split('\n')
+  pre.innerHTML = ''
+  lines.forEach((line, i) => {
+    const span = document.createElement('span')
+    span.className = 'line'
+    span.setAttribute('data-line', i + 1)
+    span.textContent = line
+    pre.appendChild(span)
+  })
+})
+</script>
+
+</body>
+</html>
