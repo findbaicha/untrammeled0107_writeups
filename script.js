@@ -2,6 +2,7 @@
 const WP_LIST = [
   { title: "[Web] BUUCTF Love_SQL", cat: "web", date: "2026-4-16", read: "3 min", path: "wps/web/buulovesql/love_sql.html" },
   { title: "[Web] BUUCTF 随便注", cat: "web", date: "2026-4-16", read: "3 min", path: "wps/web/buusuibianzhu/suibianzhu.html" },
+  { title: "[Web] BUUCTF Babysql", cat: "web", date: "2026-4-16", read: "3 min", path: "wps/web/buu/babysql/index.html" },
   { title: "[Web] CTFShow Base64Encode", cat: "web", date: "2026-4-16", read: "2 min", path: "wps/web/ctfshow/Base64encode/index.html" },
   { title: "[Web] CTFShow HTTP头注入", cat: "web", date: "2026-4-16", read: "2 min", path: "wps/web/ctfshow/http头注入/index.html" },
   { title: "[Pwn] 敬请期待", cat: "pwn", date: "2025-12-28", read: "5 min", path: "wps/pwn/stack.html" },
