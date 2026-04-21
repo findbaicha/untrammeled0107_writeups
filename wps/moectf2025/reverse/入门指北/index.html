@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scheme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Reverse] MoeCTF 逆向工程入门指北 | WP</title>
+  <style>
+    html[data-scheme="dark"] {
+      --body-bg: #121212;
+      --card-bg: #1e1e1e;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --border-color: #333;
+      --accent: #5d87ff;
+    }
+    body {
+      background: var(--body-bg);
+      color: var(--text-primary);
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 2rem 1rem;
+    }
+    .wp-content {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .wp-title {
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+    }
+    .wp-meta {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .wp-section {
+      margin: 2rem 0;
+    }
+    .wp-section h2 {
+      font-size: 1.2rem;
+      border-left: 3px solid var(--accent);
+      padding-left: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    /* 代码块样式 */
+    .ide {
+      background: #1a1a1a;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0;
+      border: 1px solid #444;
+      overflow-x: auto;
+    }
+    .ide pre {
+      margin: 0;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      color: #dcdcaa;
+      line-height: 1.3;
+      white-space: pre;
+    }
+
+    /* 行号样式 */
+    .line {
+      display: block;
+      white-space: pre;
+    }
+    .line::before {
+      content: attr(data-line);
+      display: inline-block;
+      min-width: 2.2em;
+      text-align: right;
+      padding-right: 0.8em;
+      margin-right: 0.8em;
+      color: #777;
+      border-right: 1px solid #333;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wp-content">
+  <h1 class="wp-title">[Reverse] MoeCTF 猜数字游戏</h1>
+  <h4 class="sub-title">纯GDB调试版(无IDA)</h4>
+  <div class="wp-meta">
+    <span>Reverse / GDB调试 / 寄存器Hook</span>
+    <span>难度：简单</span>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x01 题目分析</h2>
+    <p>附件为 ELF 64 位程序，逻辑是猜数字游戏：程序生成 0~99 随机数，允许猜 10 次，全部猜对输出 Flag。</p>
+    <p>直接 objdump 查看 main 函数定位核心逻辑。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x02 静态反汇编分析</h2>
+    <p>使用命令提取主函数：</p>
+    <div class="ide"><pre>objdump -d attachment | sed -n '/&lt;main&gt;:/,/^$/p'</pre></div>
+    <p>关键比较逻辑：</p>
+    <div class="ide"><pre>40484b:       8b 85 c4 d8 ff ff       mov    -0x273c(%rbp),%eax    # 用户输入
+404851:       39 85 cc d8 ff ff       cmp    %eax,-0x2734(%rbp)    # 与正确答案比较
+404857:       75 46                   jne    40489f               # 错误跳转</pre></div>
+    <p>正确答案存放在：$rbp-0x2734</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x03 GDB 动态调试</h2>
+    <p>设置 Intel 汇编格式，并在比较指令下断点：</p>
+    <div class="ide"><pre>(gdb) set disassembly-flavor intel
+(gdb) b *0x404851</pre></div>
+    <p>运行程序：</p>
+    <div class="ide"><pre>(gdb) run</pre></div>
+    <p>随便输入数字触发断点，查看内存中的正确答案：</p>
+    <div class="ide"><pre>(gdb) x/wd $rbp-0x2734
+0x7fffffffa6dc: 73</pre></div>
+    <p>成功获取随机数，证明可以直接从内存读取答案。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x04 GDB 自动化脚本</h2>
+    <p>编写断点命令，每次自动将 eax 修改为正确答案，实现 10 次连对：</p>
+    <div class="ide"><pre>(gdb) command 1
+Type commands for breakpoint(1), one per line.
+End with a line saying just "end".
+set $eax = *(int*)($rbp - 0x2734)
+silent
+printf "&gt;&gt; Hooked! Correct value was: %d\n", $eax
+continue
+end</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x05 运行获取 Flag</h2>
+    <p>重新运行程序，每次随便输入数字，脚本自动修正：</p>
+    <div class="ide"><pre>(gdb) run</pre></div>
+    <p>连续猜对 10 次后输出 Flag：</p>
+    <div class="ide"><pre>Continuing.
+You are right!
+The flag is moectf{open_your_IDA_and_start_reverse_engineering!!}.
+Thanks for your playing!</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x06 Flag</h2>
+    <div class="ide"><pre>moectf{open_your_IDA_and_start_reverse_engineering!!}</pre></div>
+  </div>
+</div>
+
+<script>
+// 自动给所有 .ide pre 分行加行号
+document.querySelectorAll('.ide pre').forEach(pre => {
+  const lines = pre.textContent.split('\n')
+  pre.innerHTML = ''
+  lines.forEach((line, i) => {
+    const span = document.createElement('span')
+    span.className = 'line'
+    span.setAttribute('data-line', i + 1)
+    span.textContent = line
+    pre.appendChild(span)
+  })
+})
+</script>
+
+</body>
+</html>
