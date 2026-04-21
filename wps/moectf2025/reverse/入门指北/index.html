@@ -102,7 +102,7 @@
   </div>
 
   <div class="wp-section">
-    <h2>0x02 静态反汇编分析</h2>
+    <h2>0x01 静态反汇编分析</h2>
     <p>直接使用objdump命令提取主函数 查看 main 函数定位核心逻辑：</p>
     <div class="ide"><pre>objdump -d attachment | sed -n '/&lt;main&gt;:/,/^$/p'</pre></div>
     <p>关键比较逻辑：</p>
@@ -113,7 +113,7 @@
   </div>
 
   <div class="wp-section">
-    <h2>0x03 GDB 动态调试</h2>
+    <h2>0x02 GDB 动态调试</h2>
     <p>设置 Intel 汇编格式，并在比较指令下断点：</p>
     <div class="ide"><pre>(gdb) set disassembly-flavor intel
 (gdb) b *0x404851</pre></div>
@@ -126,7 +126,7 @@
   </div>
 
   <div class="wp-section">
-    <h2>0x04 GDB 自动化脚本</h2>
+    <h2>0x03 GDB 自动化脚本</h2>
     <p>编写断点命令，每次自动将 eax 修改为正确答案，实现 10 次连对：</p>
     <div class="ide"><pre>(gdb) command 1
 Type commands for breakpoint(1), one per line.
@@ -139,7 +139,7 @@ end</pre></div>
   </div>
 
   <div class="wp-section">
-    <h2>0x05 运行获取 Flag</h2>
+    <h2>0x04 运行获取 Flag</h2>
     <p>重新运行程序，每次随便输入数字，脚本自动修正：</p>
     <div class="ide"><pre>(gdb) run</pre></div>
     <p>连续猜对 10 次后输出 Flag：</p>
@@ -150,7 +150,7 @@ Thanks for your playing!</pre></div>
   </div>
 
   <div class="wp-section">
-    <h2>0x06 Flag</h2>
+    <h2>0x05 Flag</h2>
     <div class="ide"><pre>moectf{open_your_IDA_and_start_reverse_engineering!!}</pre></div>
   </div>
 </div>
