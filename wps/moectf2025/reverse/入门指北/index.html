@@ -97,14 +97,13 @@
   </div>
 
   <div class="wp-section">
-    <h2>0x01 题目分析</h2>
+    <h2>0x00 题目分析</h2>
     <p>附件为 ELF 64 位程序，逻辑是猜数字游戏：程序生成 0~99 随机数，允许猜 10 次，全部猜对输出 Flag。</p>
-    <p>直接 objdump 查看 main 函数定位核心逻辑。</p>
   </div>
 
   <div class="wp-section">
     <h2>0x02 静态反汇编分析</h2>
-    <p>使用命令提取主函数：</p>
+    <p>直接使用objdump命令提取主函数 查看 main 函数定位核心逻辑：</p>
     <div class="ide"><pre>objdump -d attachment | sed -n '/&lt;main&gt;:/,/^$/p'</pre></div>
     <p>关键比较逻辑：</p>
     <div class="ide"><pre>40484b:       8b 85 c4 d8 ff ff       mov    -0x273c(%rbp),%eax    # 用户输入
