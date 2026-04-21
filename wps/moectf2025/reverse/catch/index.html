@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scheme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Reverse] Catch | WP</title>
+  <style>
+    html[data-scheme="dark"] {
+      --body-bg: #121212;
+      --card-bg: #1e1e1e;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --border-color: #333;
+      --accent: #5d87ff;
+    }
+    body {
+      background: var(--body-bg);
+      color: var(--text-primary);
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 2rem 1rem;
+    }
+    .wp-content {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .wp-title {
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+    }
+    .wp-meta {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .wp-section {
+      margin: 2rem 0;
+    }
+    .wp-section h2 {
+      font-size: 1.2rem;
+      border-left: 3px solid var(--accent);
+      padding-left: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .ide {
+      background: #1a1a1a;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0;
+      border: 1px solid #444;
+      overflow-x: auto;
+    }
+    .ide pre {
+      margin: 0;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      color: #dcdcaa;
+      line-height: 1.3;
+      white-space: pre;
+    }
+
+    .line {
+      display: block;
+      white-space: pre;
+    }
+    .line::before {
+      content: attr(data-line);
+      display: inline-block;
+      min-width: 2.2em;
+      text-align: right;
+      padding-right: 0.8em;
+      margin-right: 0.8em;
+      color: #777;
+      border-right: 1px solid #333;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wp-content">
+  <h1 class="wp-title">[Reverse] Catch</h1>
+  <h4 class="sub-title">Fake 加密 + 真实 Rot13 套路题</h4>
+  <div class="wp-meta">
+    <span>Reverse / IDA / Fake加密 / Rot13</span>
+    <span>难度：简单</span>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x00 题目描述</h2>
+    <p>双击 exe 秒闪，属于标准套路逆向。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x01 IDA 打开看 main</h2>
+    <p>main 函数非常干净，直接调用 solve：</p>
+    <div class="ide">
+<pre>int __fastcall main(int argc, const char **argv, const char **envp)
+{
+  _main(argc, argv, envp);
+  solve();
+  return 0;
+}</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x02 进入 solve 函数</h2>
+    <p>程序打印一句话后直接抛异常崩溃：</p>
+    <div class="ide">
+<pre>void __fastcall __noreturn solve()
+{
+  std::logic_error *exception; // rbx
+
+  printf("my flag is hidden in this program. Can you find it?\n");
+  sub_114514();
+  exception = (std::logic_error *)_cxa_allocate_exception(0x10u);
+  std::logic_error::logic_error(exception, "nothing but error");
+  _cxa_throw(exception, (struct type_info *)&`typeinfo for'std::logic_error, refptr__ZNSt11logic_errorD1Ev);
+}</pre>
+    </div>
+    <p>核心逻辑在 <code>sub_114514</code>。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x03 进入 sub_114514</h2>
+    <p>对 <code>_data_start__</code> 进行逐字节加密：</p>
+    <div class="ide">
+<pre>__int64 __fastcall sub_114514()
+{
+  __int64 result; // rax
+  int v1; // [rsp+28h] [rbp-8h]
+  unsigned int i; // [rsp+2Ch] [rbp-4h]
+
+  printf("try to catch me\n");
+  v1 = strlen(_data_start__);
+  for ( i = 0; ; ++i )
+  {
+    result = i;
+    if ( (int)i >= v1 )
+      break;
+    _data_start__[i] = enc(_data_start__[i]);
+  }
+  return result;
+}</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x04 加密数据 &amp; 加密函数</h2>
+    <p>数据段拿到密文：</p>
+    <div class="ide">
+<pre>geoi~lq~bcyUcyUkUlkaoUlfkmw</pre>
+    </div>
+    <p>enc 函数：异或 0x11</p>
+    <div class="ide">
+<pre>__int64 __fastcall enc(char a1)
+{
+  return (unsigned int)(a1 ^ 0x11);
+}</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x05 坑点：IDA 编译错误 + Fake 加密</h2>
+    <p>题目提示：</p>
+    <div class="ide">
+<pre>IDA pro 9.0 推出了针对 C++ exception 的优化
+但是这并不意味着所有的 try catch 都能被正确反编译</pre>
+    </div>
+    <p>直接异或解密会出乱码，因为这是<strong>Fake 加密</strong>！</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x06 正确思路：字符串查找 Rot13</h2>
+    <p>字符串窗口发现疑似 flag 格式：</p>
+    <div class="ide">
+<pre>zbrpgs{F4z3_Ge1px_jvgu_@sybjre_qrfhjn}</pre>
+    </div>
+    <p>直接丢解码工具：</p>
+    <div class="ide">
+<pre>Rot13 → moectf{S4m3_Tr1ck_with_@flower_desuwa}</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x07 Flag</h2>
+    <div class="ide">
+<pre>moectf{S4m3_Tr1ck_with_@flower_desuwa}</pre>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.ide pre').forEach(pre => {
+  const lines = pre.textContent.split('\n')
+  pre.innerHTML = ''
+  lines.forEach((line, i) => {
+    const span = document.createElement('span')
+    span.className = 'line'
+    span.setAttribute('data-line', i + 1)
+    span.textContent = line
+    pre.appendChild(span)
+  })
+})
+</script>
+
+</body>
+</html>
