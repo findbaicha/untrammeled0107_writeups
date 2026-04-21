@@ -5,9 +5,10 @@ const WP_LIST = [
   { title: "[Web] BUUCTF Babysql", cat: "web", date: "2026-4-16", read: "3 min", path: "wps/web/buu/babysql/index.html" },
   { title: "[Web] CTFShow Base64Encode", cat: "web", date: "2026-4-16", read: "2 min", path: "wps/web/ctfshow/Base64encode/index.html" },
   { title: "[Web] CTFShow HTTP头注入", cat: "web", date: "2026-4-16", read: "2 min", path: "wps/web/ctfshow/http头注入/index.html" },
-  { title: "[Pwn] 敬请期待", cat: "pwn", date: "2025-12-28", read: "5 min", path: "wps/pwn/stack.html" },
   { title: "[Reverse] MOECTF2025 Speed", cat: "reverse", date: "2026-4-18", read: "4 min", path: "wps/moectf2025/reverse/speed/index.html" },
   { title: "[Reverse] MOECTF2025 逆向工程入门指北", cat: "reverse", date: "2026-4-20", read: "4 min", path: "wps/moectf2025/reverse/入门指北/index.html" },
+  { title: "[Reverse] MOECTF2025 Base", cat: "reverse", date: "2026-4-21", read: "4 min", path: "wps/moectf2025/reverse/base/index.html" },
+  { title: "[Pwn] 敬请期待", cat: "pwn", date: "2025-12-28", read: "5 min", path: "wps/pwn/stack.html" },
   { title: "[Misc] 敬请期待", cat: "misc", date: "2025-12-20", read: "2 min", path: "wps/misc/stego.html" },
   { title: "[Crypto] 敬请期待", cat: "crypto", date: "2025-12-18", read: "3 min", path: "wps/crypto/rsa.html" },
 ];

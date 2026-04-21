@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scheme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Reverse] MoeCTF Base | WP</title>
+  <style>
+    html[data-scheme="dark"] {
+      --body-bg: #121212;
+      --card-bg: #1e1e1e;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --border-color: #333;
+      --accent: #5d87ff;
+    }
+    body {
+      background: var(--body-bg);
+      color: var(--text-primary);
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 2rem 1rem;
+    }
+    .wp-content {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .wp-title {
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+    }
+    .wp-meta {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .wp-section {
+      margin: 2rem 0;
+    }
+    .wp-section h2 {
+      font-size: 1.2rem;
+      border-left: 3px solid var(--accent);
+      padding-left: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .ide {
+      background: #1a1a1a;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0;
+      border: 1px solid #444;
+      overflow-x: auto;
+    }
+    .ide pre {
+      margin: 0;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      color: #dcdcaa;
+      line-height: 1.3;
+      white-space: pre;
+    }
+
+    .line {
+      display: block;
+      white-space: pre;
+    }
+    .line::before {
+      content: attr(data-line);
+      display: inline-block;
+      min-width: 2.2em;
+      text-align: right;
+      padding-right: 0.8em;
+      margin-right: 0.8em;
+      color: #777;
+      border-right: 1px solid #333;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wp-content">
+  <h1 class="wp-title">[Reverse] MoeCTF Base</h1>
+  <h4 class="sub-title">咱就是说有史以来最牛大的reverse非这题莫属</h4>
+  <div class="wp-meta">
+    <span>Reverse / IDA / Base64</span>
+    <span>难度：有手就行</span>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x00 题目分析</h2>
+    <p>附件为 exe 程序，运行后要求输入 flag。</p>
+    <p>直接丢 IDA 看 main 直接瞳孔地震</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x01 IDA 反编译源码</h2>
+    <p>直接查看 main 函数：</p>
+    <div class="ide">
+<pre>int __fastcall main(int argc, const char **argv, const char **envp)
+{
+  FILE *v3; // rax
+  __int64 v4; // rdx
+  __int64 v5; // rax
+  unsigned __int64 v6; // rax
+  char *v7; // rbx
+  int v8; // eax
+  char *v9; // rcx
+  char v11[16]; // [rsp+20h] [rbp-98h] BYREF
+  char Buffer[112]; // [rsp+30h] [rbp-88h] BYREF
+
+  sub_140001010(Format);
+  sub_140001010((char *)&byte_1400032F0);
+  v3 = _acrt_iob_func(0);
+  fgets(Buffer, 100, v3);
+  v4 = -1;
+  v5 = -1;
+  do
+    ++v5;
+  while ( Buffer[v5] );
+  if ( v5 && v11[v5 + 15] == 10 )
+  {
+    v6 = v5 - 1;
+    if ( v6 >= 0x64 )
+      sub_140001448(Buffer);
+    Buffer[v6] = 0;
+  }
+  do
+    ++v4;
+  while ( Buffer[v4] );
+  v7 = (char *)sub_140001070(Buffer, v4, v11);
+  v8 = strcmp(v7, "bW9lY3Rme1kwdV9DNG5fRzAwZF9BdF9CNDVlNjQhIX0=");
+  v9 = (char *)&unk_140003300;
+  if ( v8 )
+    v9 = (char *)&byte_140003318;
+  sub_140001010(v9);
+  free(v7);
+  return 0;
+}</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x02 解题思路</h2>
+    <p>一眼看到单纯套了个base64：</p>
+    <div class="ide"><pre>strcmp(v7, "bW9lY3Rme1kwdV9DNG5fRzAwZF9BdF9CNDVlNjQhIX0=");</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x03 Base64 解码</h2>
+    <p>使用 Hackbar / CyberChef 一键解码：</p>
+    <div class="ide"><pre>bW9lY3Rme1kwdV9DNG5fRzAwZF9BdF9CNDVlNjQhIX0=</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x04 Flag</h2>
+    <div class="ide"><pre>moectf{Y0u_C4n_G00d_At_B45e64!!}</pre></div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.ide pre').forEach(pre => {
+  const lines = pre.textContent.split('\n')
+  pre.innerHTML = ''
+  lines.forEach((line, i) => {
+    const span = document.createElement('span')
+    span.className = 'line'
+    span.setAttribute('data-line', i + 1)
+    span.textContent = line
+    pre.appendChild(span)
+  })
+})
+</script>
+
+</body>
+</html>
