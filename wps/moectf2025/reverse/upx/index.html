@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scheme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Reverse] UPX脱壳 + 异或逆向 | WP</title>
+  <style>
+    html[data-scheme="dark"] {
+      --body-bg: #121212;
+      --card-bg: #1e1e1e;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --border-color: #333;
+      --accent: #5d87ff;
+    }
+    body {
+      background: var(--body-bg);
+      color: var(--text-primary);
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 2rem 1rem;
+    }
+    .wp-content {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .wp-title {
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+    }
+    .wp-meta {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .wp-section {
+      margin: 2rem 0;
+    }
+    .wp-section h2 {
+      font-size: 1.2rem;
+      border-left: 3px solid var(--accent);
+      padding-left: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .ide {
+      background: #1a1a1a;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0;
+      border: 1px solid #444;
+      overflow-x: auto;
+    }
+    .ide pre {
+      margin: 0;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      color: #dcdcaa;
+      line-height: 1.3;
+      white-space: pre;
+    }
+
+    .line {
+      display: block;
+      white-space: pre;
+    }
+    .line::before {
+      content: attr(data-line);
+      display: inline-block;
+      min-width: 2.2em;
+      text-align: right;
+      padding-right: 0.8em;
+      margin-right: 0.8em;
+      color: #777;
+      border-right: 1px solid #333;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wp-content">
+  <h1 class="wp-title">[Reverse] UPX脱壳 + 异或逆向解题</h1>
+  <h4 class="sub-title">PE文件脱壳 + 硬编码异或算法逆推</h4>
+  <div class="wp-meta">
+    <span>Reverse / UPX脱壳 / IDA / 异或加密</span>
+    <span>难度：中等</span>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x00 题目初步分析</h2>
+    <p>运行 exe 提示输入 flag，直接使用 GDB 查看文件信息，判断是否加壳。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x01 GDB 查壳</h2>
+    <p>使用 GDB 加载程序，查看文件信息：</p>
+    <div class="ide">
+<pre>gdb ./moe.exe
+info file</pre>
+    </div>
+    <p>回显发现 UPX 加壳：</p>
+    <div class="ide">
+<pre>Symbols from "/workspaces/untrammeled0107_writeups/test/moe.exe".
+Local exec file:
+        `/workspaces/untrammeled0107_writeups/test/moe.exe', file type pei-x86-64.
+        Entry point: 0x14000a260
+        0x0000000140001000 - 0x0000000140009000 is UPX0
+        0x0000000140009000 - 0x000000014000a600 is UPX1
+        0x000000014000b000 - 0x000000014000b600 is .rsrc</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x02 UPX 脱壳</h2>
+    <p>退出 GDB，使用 UPX 命令脱壳：</p>
+    <div class="ide">
+<pre>exit
+upx -d moe.exe -o moe_attack.exe</pre>
+    </div>
+    <p>脱壳成功回显：</p>
+    <div class="ide">
+<pre>untrammeled@laptop-fpsmp3t:/mnt/c/Users/HP/Downloads/moe$ upx -d moe.exe -o moe_attack.exe
+                       Ultimate Packer for eXecutables
+                          Copyright (C) 1996 - 2024
+UPX 4.2.2       Markus Oberhumer, Laszlo Molnar & John Reiser    Jan 3rd 2024
+
+        File size         Ratio      Format      Name
+   --------------------   ------   -----------   -----------
+     12288 <-      8192   66.67%    win64/pe     moe_attack.exe
+
+Unpacked 1 file.</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x03 IDA 反编译分析</h2>
+    <p>脱壳后丢入 IDA，直接查看 main 函数核心逻辑：</p>
+    <div class="ide">
+<pre>int __fastcall main(int argc, const char **argv, const char **envp)
+{
+  FILE *v3; // rax
+  __int64 v4; // rcx
+  __int64 v5; // rax
+  int v6; // r9d
+  __int64 v7; // r8
+  char v8; // dl
+  _OWORD v10[8]; // [rsp+20h] [rbp-148h]
+  int v11; // [rsp+A0h] [rbp-C8h]
+  int v12; // [rsp+A4h] [rbp-C4h]
+  int v13; // [rsp+A8h] [rbp-C0h]
+  char v14[48]; // [rsp+B0h] [rbp-B8h]
+  char Buffer[112]; // [rsp+E0h] [rbp-88h] BYREF
+
+  v10[0] = _mm_load_si128((const __m128i *)&xmmword_1400032E0);
+  v10[1] = _mm_load_si128((const __m128i *)&xmmword_140003310);
+  v10[2] = _mm_load_si128((const __m128i *)&xmmword_140003320);
+  v10[3] = _mm_load_si128((const __m128i *)&xmmword_1400032F0);
+  v10[4] = _mm_load_si128((const __m128i *)&xmmword_1400032D0);
+  v10[5] = _mm_load_si128((const __m128i *)&xmmword_1400032B0);
+  v10[6] = _mm_load_si128((const __m128i *)&xmmword_140003300);
+  v10[7] = _mm_load_si128((const __m128i *)&xmmword_1400032C0);
+  v11 = 41;
+  v12 = 36;
+  v13 = 86;
+  sub_140001010("please input your flag: ");
+  v3 = _acrt_iob_func(0);
+  fgets(Buffer, 100, v3);
+  v4 = -1;
+  do
+    ++v4;
+  while ( Buffer[v4] );
+  v5 = 0;
+  v6 = 0;
+  if ( (int)v4 > 0 )
+  {
+    v7 = 0;
+    do
+    {
+      v8 = Buffer[v7] ^ 0x21;
+      if ( v6 < (int)v4 - 1 )
+        v8 ^= Buffer[v7 + 1];
+      v14[v7] = v8;
+      ++v6;
+      ++v7;
+    }
+    while ( v7 < (int)v4 );
+  }
+  while ( v14[v5] == *((_DWORD *)v10 + v5) )
+  {
+    if ( ++v5 >= 35 )
+      return 0;
+  }
+  sub_140001010("you will never get the flag!!!!\n");
+  return 0;
+}</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x04 加密算法分析</h2>
+    <p>核心加密逻辑：</p>
+    <div class="ide">
+<pre>if ( (int)v4 > 0 )
+{
+v7 = 0;
+do
+{
+v8 = Buffer[v7] ^ 0x21;
+if ( v6 < (int)v4 - 1 )
+v8 ^= Buffer[v7 + 1];
+v14[v7] = v8;
+++v6;
+++v7;
+}
+while ( v7 < (int)v4 );
+}</pre>
+    </div>
+    <p>规则：
+    <br>第 i 位：out[i] = in[i] ^ 0x21 ^ in[i+1]
+    <br>最后一位：out[i] = in[i] ^ 0x21
+    <br>处理后与硬编码数组 v10 比较，完全相等输出 flag。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x05 提取硬编码密文</h2>
+    <p>从 IDA 数据段提取全部 35 字节密文，整理为数组：</p>
+    <div class="ide">
+<pre>enc=[
+    0x23, 0x2b, 0x27, 0x36, 0x33, 0x3c, 0x03, 0x48,
+    0x64, 0x0b, 0x1d, 0x76, 0x7b, 0x10, 0x0b, 0x3a,
+    0x3f, 0x65, 0x76, 0x29, 0x15, 0x37, 0x1c, 0x0a,
+    0x08, 0x21, 0x3e, 0x3c, 0x3d, 0x16, 0x0b, 0x24,
+    0x29, 0x24, 0x56, 43			
+]</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x06 Python 逆推 EXP</h2>
+    <p>先全体异或 0x21，再从后往前逆异或：</p>
+    <div class="ide">
+<pre>enc=[
+    0x23, 0x2b, 0x27, 0x36, 0x33, 0x3c, 0x03, 0x48,
+    0x64, 0x0b, 0x1d, 0x76, 0x7b, 0x10, 0x0b, 0x3a,
+    0x3f, 0x65, 0x76, 0x29, 0x15, 0x37, 0x1c, 0x0a,
+    0x08, 0x21, 0x3e, 0x3c, 0x3d, 0x16, 0x0b, 0x24,
+    0x29, 0x24, 0x56, 43			
+]
+xored=[]
+for i in range(len(enc)):
+    xored.append(enc[i]^0x21)
+for i in range(len(xored)-2,-1,-1):
+    xored[i]=xored[i]^xored[i+1]
+flag=''.join(chr(i) for i in xored)
+print(flag)</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x07 Flag</h2>
+    <div class="ide">
+<pre>moectf{Y0u_c4n_unp4ck_It_vvith_upx}</pre>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.ide pre').forEach(pre => {
+  const lines = pre.textContent.split('\n')
+  pre.innerHTML = ''
+  lines.forEach((line, i) => {
+    const span = document.createElement('span')
+    span.className = 'line'
+    span.setAttribute('data-line', i + 1)
+    span.textContent = line
+    pre.appendChild(span)
+  })
+})
+</script>
+
+</body>
+</html>
