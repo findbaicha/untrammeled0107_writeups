@@ -10,6 +10,7 @@ const WP_LIST = [
   { title: "[Reverse] MOECTF2025 Base", cat: "reverse", date: "2026-4-21", read: "4 min", path: "wps/moectf2025/reverse/base/index.html" },
   { title: "[Reverse] MOECTF2025 Catch", cat: "reverse", date: "2026-4-21", read: "4 min", path: "wps/moectf2025/reverse/catch/index.html" },
   { title: "[Reverse] MOECTF2025 UPX", cat: "reverse", date: "2026-4-23", read: "4 min", path: "wps/moectf2025/reverse/upx/index.html" },
+  { title: "[Reverse] MOECTF2025 ez3", cat: "reverse", date: "2026-4-24", read: "4 min", path: "wps/moectf2025/reverse/ez3/index.html" },
   { title: "[Pwn] 敬请期待", cat: "pwn", date: "2025-12-28", read: "5 min", path: "wps/pwn/stack.html" },
   { title: "[Misc] 敬请期待", cat: "misc", date: "2025-12-20", read: "2 min", path: "wps/misc/stego.html" },
   { title: "[Crypto] 敬请期待", cat: "crypto", date: "2025-12-18", read: "3 min", path: "wps/crypto/rsa.html" },
