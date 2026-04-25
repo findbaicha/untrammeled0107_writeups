@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scheme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Reverse] Z3符号执行 | WP</title>
+  <style>
+    html[data-scheme="dark"] {
+      --body-bg: #121212;
+      --card-bg: #1e1e1e;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --border-color: #333;
+      --accent: #5d87ff;
+    }
+    body {
+      background: var(--body-bg);
+      color: var(--text-primary);
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 2rem 1rem;
+    }
+    .wp-content {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .wp-title {
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+    }
+    .wp-meta {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .wp-section {
+      margin: 2rem 0;
+    }
+    .wp-section h2 {
+      font-size: 1.2rem;
+      border-left: 3px solid var(--accent);
+      padding-left: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .ide {
+      background: #1a1a1a;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0;
+      border: 1px solid #444;
+      overflow-x: auto;
+    }
+    .ide pre {
+      margin: 0;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      color: #dcdcaa;
+      line-height: 1.3;
+      white-space: pre;
+    }
+
+    .line {
+      display: block;
+      white-space: pre;
+    }
+    .line::before {
+      content: attr(data-line);
+      display: inline-block;
+      min-width: 2.2em;
+      text-align: right;
+      padding-right: 0.8em;
+      margin-right: 0.8em;
+      color: #777;
+      border-right: 1px solid #333;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wp-content">
+  <h1 class="wp-title">[Reverse] Z3符号执行</h1>
+  <h4 class="sub-title">ELF逆向 ｜ 链式异或加密 ｜ Z3约束求解</h4>
+  <div class="wp-meta">
+    <span>Reverse / IDA / Z3 / 符号执行</span>
+    <span>难度：中等</span>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x00 程序初步查看</h2>
+    <p>拿到elf直接上ida反编译看main怎么出flag</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x01 main 反编译代码</h2>
+    <div class="ide">
+<pre>int __fastcall main(int argc, const char **argv, const char **envp)
+{
+  char v3; // bl
+  bool v4; // r12
+  __int64 v5; // rbx
+  __int64 v6; // rax
+  char v8; // [rsp+Fh] [rbp-71h] BYREF
+  __int64 v9; // [rsp+10h] [rbp-70h] BYREF
+  __int64 v10; // [rsp+18h] [rbp-68h] BYREF
+  _BYTE v11[32]; // [rsp+20h] [rbp-60h] BYREF
+  _BYTE v12[40]; // [rsp+40h] [rbp-40h] BYREF
+  unsigned __int64 v13; // [rsp+68h] [rbp-18h]
+
+  v13 = __readfsqword(0x28u);
+  IO_printf((unsigned int)"Input your flag:\n> ", (_DWORD)argv, (_DWORD)envp);
+  IO_fflush(stdout);
+  std::string::basic_string(v11);
+  std::operator>><char>((std::istream *)&std::cin);
+  if ( std::string::length(v11, v11) == 42 )
+  {
+    v3 = 0;
+    v4 = 1;
+    if ( (unsigned __int64)std::string::length(v11, v11) > 7 )
+    {
+      std::string::substr(v12, v11, 0, 7);
+      v3 = 1;
+      if ( !(unsigned __int8)std::operator!=<char>(v12, "moectf{") && *(_BYTE *)std::string::back(v11) == 125 )
+        v4 = 0;
+    }
+    if ( v3 )
+      std::string::~string(v12);
+    if ( v4 )
+    {
+      IO_puts("FORMAT ERROR!");
+    }
+    else
+    {
+      std::allocator<char>::allocator(&v8);
+      v10 = std::string::end(v11);
+      v5 = __gnu_cxx::__normal_iterator<char *,std::string>::operator-(&v10, 1);
+      v9 = std::string::begin(v11);
+      v6 = __gnu_cxx::__normal_iterator<char *,std::string>::operator+(&v9, 7);
+      std::string::basic_string<__gnu_cxx::__normal_iterator<char *,std::string>,void>(v12, v6, v5, &v8);
+      std::string::operator=(v11, v12);
+      std::string::~string(v12);
+      std::allocator<char>::~allocator(&v8);
+      std::string::basic_string(v12, v11);
+      LOBYTE(v5) = check(v12);
+      std::string::~string(v12);
+      if ( (_BYTE)v5 )
+      {
+        IO_puts("OK");
+        IO_puts("But I don't know what the true flag is");
+      }
+      else
+      {
+        IO_puts("try again~");
+      }
+    }
+  }
+  else
+  {
+    IO_puts("Length error!");
+  }
+  std::string::~string(v11);
+  return 0;
+}</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x02 算法基本分析</h2>
+    <p>1. 总长度必须 = 42</p>
+    <div class="ide">
+<pre>if ( std::string::length(v11) == 42 )</pre>
+    </div>
+    <p>2. 必须以 moectf{ 开头 ; 以 } 结尾（ASCII 125）否则format error</p>
+    <div class="ide">
+<pre>if ( !(unsigned __int8)std::operator!=<char>(v12, "moectf{") && *(_BYTE *)std::string::back(v11) == 125 )</pre>
+    </div>
+    <p>3. 最终验证靠一个函数：check(v12)</p>
+    <p>返回 1 → 输出 OK</p>
+    <p>返回 0 → 输出 try again~</p>
+    <div class="ide">
+<pre>LOBYTE(v5) = check(v12);</pre>
+    </div>
+    <p>4. check在main的传入值</p>
+    <p>s[0..33] = flag[7..40]   （去掉 moectf{ 和 }）</p>
+    <div class="ide">
+<pre>v6 = begin + 7;
+v5 = end - 1;
+std::string(v12, v6, v5);</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x03 check 函数反编译</h2>
+    <p>双击过去看看check的算法反编译</p>
+    <div class="ide">
+<pre>__int64 __fastcall check(__int64 a1)
+{
+  int i; // [rsp+1Ch] [rbp-4h]
+
+  for ( i = 0; i <= 33; ++i )
+  {
+    check(std::string)::b[i] = 47806 * (*(char *)std::string::operator[](a1, i) + i);
+    if ( i )
+      check(std::string)::b[i] ^= check(std::string)::b[i - 1] ^ 0x114514;
+    check(std::string)::b[i] %= 51966;
+    if ( check(std::string)::b[i] != a[i] )
+      return 0;
+  }
+  return 1;
+}</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x04 加密算法逻辑分析</h2>
+    <p>这是正向加密逻辑，我们要反向解密：</p>
+    <p>已知条件</p>
+    <p>输入：34 个字符（记为 s[i]，i=0~33）</p>
+    <p>正向公式：</p>
+    <div class="ide">
+<pre>temp = 47806 * (s[i] + i);
+if (i != 0)
+    temp ^= b[i-1] ^ 0x114514;
+b[i] = temp % 51966;</pre>
+    </div>
+    <p>最终必须等于 常量数组 a[i]</p>
+    <p>而且不能直接“除回来”，因为：</p>
+    <p>有 % 51966</p>
+    <p>有 ^（异或链）</p>
+    <p>必须逐位爆破 s[i]</p>
+    <div class="ide">
+<pre>if (b[i] != a[i]) return 0;</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x05 提取程序硬编码数组 a</h2>
+    <p>数组 a 是写死在程序里的正确结果，正是flag</p>
+    <p>双击a[i]过去查看数据段内容：</p>
+    <div class="ide">
+<pre>.data:00000000005D9140                 public a
+.data:00000000005D9140 ; _DWORD a[34]
+.data:00000000005D9140 a               dd 0B1B0h, 5678h, 7FF2h, 0A332h, 0A0E8h, 364Ch, 2BD4h
+.data:00000000005D915C                 dd 0C8FEh, 4A7Ch, 18h, 2BE4h, 4144h, 3BA6h, 0BE8Ch, 8F7Eh
+.data:00000000005D917C                 dd 35F8h, 61AAh, 2B4Ah, 6828h, 0B39Eh, 0B542h, 33ECh, 0C7D8h
+.data:00000000005D919C                 dd 448Ch, 9310h, 8808h, 0ADD4h, 3CC2h, 796h, 0C940h, 4E32h
+.data:00000000005D91BC                 dd 4E2Eh, 924Ah, 5B5Ch</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x06 Z3 约束求解 EXP</h2>
+    <p>拿到十六进制数组，编写z3脚本约束求解：</p>
+    <div class="ide">
+<pre>from z3 import *
+
+a = [
+0xB1B0, 0x5678, 0x7FF2, 0xA332, 0xA0E8, 0x364C, 0x2BD4,
+0xC8FE, 0x4A7C, 0x18,   0x2BE4, 0x4144, 0x3BA6, 0xBE8C,
+0x8F7E, 0x35F8, 0x61AA, 0x2B4A, 0x6828, 0xB39E, 0xB542,
+0x33EC, 0xC7D8, 0x448C, 0x9310, 0x8808, 0xADD4, 0x3CC2,
+0x796,  0xC940, 0x4E32, 0x4E2E, 0x924A, 0x5B5C
+]
+
+# ===== 基本信息 =====
+prefix = "moectf{"
+prefix_len = len(prefix)
+
+n = 34  # check only part
+
+s = [BitVec(f's{i}', 8) for i in range(prefix_len + n + 1)]
+b = [BitVec(f'b{i}', 32) for i in range(n)]
+
+solver = Solver()
+
+MOD = 51966
+MASK32 = 0xffffffff
+
+# ===== 固定前缀 =====
+for i, c in enumerate(prefix):
+    solver.add(s[i] == ord(c))
+
+# ===== 固定结尾 =====
+solver.add(s[prefix_len + n] == ord('}'))
+
+# ===== 可打印字符约束 =====
+for i in range(prefix_len, prefix_len + n):
+    solver.add(s[i] >= 32, s[i] <= 126)
+
+# ===== 核心 check =====
+for i in range(n):
+    idx = prefix_len + i
+
+    t = 47806 * (ZeroExt(24, s[idx]) + i)
+
+    if i > 0:
+        t = t ^ (b[i-1] ^ 0x114514)
+
+    solver.add(b[i] == URem(t, BitVecVal(MOD, 32)))
+    solver.add(b[i] == a[i])
+
+# ===== solve =====
+if solver.check() == sat:
+    m = solver.model()
+    res = ''.join(chr(m[s[i]].as_long()) for i in range(prefix_len, prefix_len + n))
+    print("FLAG:", prefix + res + "}")
+else:
+    print("unsat")</pre>
+    </div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x07 运行结果</h2>
+    <p>脚本输出：</p>
+    <div class="ide">
+<pre>FLAG: moectf{Y0u_Kn0w_z3_S0Iv3r_N0w_a1f2bdce4a9}</pre>
+    </div>
+    <p>最终Flag：</p>
+<div class="wp-section">
+    <h2>0x08 Flag</h2>
+    <div class="ide">
+<pre>moectf{Y0u_Kn0w_z3_S0Iv3r_N0w_a1f2bdce4a9}</pre>
+    </div>
+    <p>提交跑路</p>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.ide pre').forEach(pre => {
+  const lines = pre.textContent.split('\n')
+  pre.innerHTML = ''
+  lines.forEach((line, i) => {
+    const span = document.createElement('span')
+    span.className = 'line'
+    span.setAttribute('data-line', i + 1)
+    span.textContent = line
+    pre.appendChild(span)
+  })
+})
+</script>
+
+</body>
+</html>
