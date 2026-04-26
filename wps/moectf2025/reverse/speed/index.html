@@ -4,121 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>[Reverse] MoeCTF 窗口闪退RC4 | WP</title>
-  <style>
-    html[data-scheme="dark"] {
-      --body-bg: #121212;
-      --card-bg: #1a1a1a;
-      --text-primary: #e0e0e0;
-      --text-secondary: #a0a0a0;
-      --border-color: #333;
-      --accent: #5d87ff;
-      --code-bg: #161616;
-      --line-number: #555;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      background: var(--body-bg);
-      color: var(--text-primary);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      line-height: 1.7;
-      margin: 0;
-      padding: 2rem 1rem;
-    }
-    .wp-content {
-      max-width: 920px;
-      margin: 0 auto;
-      background: var(--card-bg);
-      padding: 2.5rem;
-      border-radius: 14px;
-      border: 1px solid var(--border-color);
-      box-shadow: 0 0 30px rgba(0,0,0,0.3);
-    }
-    .wp-title {
-      font-size: 1.8rem;
-      margin: 0 0 1rem;
-      color: #fff;
-    }
-    .wp-meta {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      display: flex;
-      gap: 1.2rem;
-      margin-bottom: 2.2rem;
-      flex-wrap: wrap;
-    }
-    .wp-section {
-      margin: 2.4rem 0;
-    }
-    .wp-section h2 {
-      font-size: 1.3rem;
-      border-left: 3px solid var(--accent);
-      padding-left: 0.8rem;
-      margin-bottom: 1.2rem;
-      color: #fff;
-    }
-    p {
-      margin: 0.8rem 0;
-    }
-
-    /* 代码块增强 */
-    .ide {
-      background: var(--code-bg);
-      border-radius: 8px;
-      padding: 1.2rem;
-      margin: 1.2rem 0;
-      border: 1px solid #444;
-      overflow-x: auto;
-      transition: 0.2s;
-    }
-    .ide:hover {
-      border-color: #555;
-    }
-    .ide pre {
-      margin: 0;
-      font-family: Consolas, "Monaco", monospace;
-      font-size: 13.5px;
-      color: #dcdcaa;
-      line-height: 1.45;
-      white-space: pre;
-    }
-
-    /* 行号优化 */
-    .line {
-      display: block;
-      white-space: pre;
-    }
-    .line::before {
-      content: attr(data-line);
-      display: inline-block;
-      min-width: 2.4em;
-      text-align: right;
-      padding-right: 0.9em;
-      margin-right: 0.9em;
-      color: var(--line-number);
-      border-right: 1px solid #333;
-      user-select: none;
-      font-weight: 500;
-    }
-
-    /* 滚动条美化 */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #444;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #181818;
-    }
-  </style>
+  <link rel="stylesheet" href="../../../../style.css">
 </head>
 <body>
 
-<div class="wp-content">
+<div class="wp-content" data-category="reverse" data-competition="MoeCTF 2025" data-challenge="Speed" data-difficulty="medium" data-date="2026-04-16">
   <h1 class="wp-title">[Reverse] MoeCTF 窗口闪退RC4解密</h1>
   <div class="wp-meta">
     <span>Reverse / RC4 / Windows窗口</span>
@@ -450,7 +340,7 @@ LABEL_15:
     <p>2. 53-56行通过一大堆赋值语句，把一串看似随机的16进制数塞进了Str及其相邻的内存空间（v25, v26）</p>
     <p>3. 57行strcpy(v23, "mylittlepony"); —— 你的密钥是mylittlepony，长度是 12</p>
     <p>4. 60行RC4Crypt((unsigned __int8 *)Str, v27, (const unsigned __int8 *)v23, 12); —— 调用了标准的RC4算法，使用密钥对Str中的密文进行解密</p>
-    <p>5. 61行strcat_0(Destination, Str); 将解密出来的Flag拼接到"Your flag is "后面，然后调用DrawTextA画在那个“闪退”的窗口上</p>
+    <p>5. 61行strcat_0(Destination, Str); 将解密出来的Flag拼接到"Your flag is "后面，然后调用DrawTextA画在那个"闪退"的窗口上</p>
   </div>
 
   <div class="wp-section">
@@ -496,6 +386,6 @@ document.querySelectorAll('.ide pre').forEach(pre => {
   })
 })
 </script>
-
+<script src="../../../../wp-script.js"></script>
 </body>
 </html>

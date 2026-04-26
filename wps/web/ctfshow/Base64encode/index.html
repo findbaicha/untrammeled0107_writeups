@@ -3,92 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>[Web] Base64Encode | CTF WP</title>
+  <title>[Web] Base64encode | CTF WP</title>
   <link rel="stylesheet" href="../../../../style.css">
-  <style>
-    html[data-scheme="dark"] {
-      --body-bg: #121212 !important;
-      --card-bg: #1e1e1e !important;
-      --text-primary: #e0e0e0 !important;
-      --text-secondary: #a0a0a0 !important;
-      --border-color: #333 !important;
-      --accent: #5d87ff !important;
-    }
-    .wp-content {
-      max-width: 900px;
-      margin: 0 auto;
-      background: var(--card-bg);
-      padding: 2.5rem;
-      border-radius: 16px;
-      border: 1px solid var(--border-color);
-    }
-    .wp-title {
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
-      color: var(--text-primary);
-    }
-    .wp-meta {
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-      font-size: 0.95rem;
-      display: flex;
-      gap: 1rem;
-    }
-    .wp-section {
-      margin: 2.5rem 0;
-    }
-    .wp-section h2 {
-      font-size: 1.3rem;
-      margin-bottom: 1rem;
-      color: var(--text-primary);
-      border-left: 4px solid var(--accent);
-      padding-left: 0.8rem;
-    }
-    pre {
-      background: #1a1a1a !important;
-      color: #dcdcaa !important;
-      padding: 1rem;
-      border-radius: 8px;
-      overflow-x: auto;
-      margin: 1rem 0;
-      border: 1px solid #444 !important;
-    }
-    .back-home {
-      display: inline-block;
-      margin-bottom: 2rem;
-      color: var(--accent);
-      font-weight: 500;
-    }
-    .wp-img {
-      width: 100%;
-      border-radius: 8px;
-      margin: 1.2rem 0;
-      box-shadow: 0 0 12px rgba(0,0,0,0.3);
-    }
-  </style>
 </head>
 <body>
-<div class="container">
-  <main class="main full-width">
-    <div class="wp-content">
-      <a href="../../../../index.html" class="back-home">← 返回主页</a>
-      <h1 class="wp-title">[Web] Base64Encode</h1>
-      <div class="wp-meta">
-        <span>分类：Web 前端验证 / Base64解码</span>
-        <span>难度：简单</span>
-        <span>时间：2026-04-16</span>
-      </div>
 
-      <div class="wp-section">
-        <h2>0x01 题目环境</h2>
-        <p>打开页面看到登录界面，存在密码输入框。</p>
-        <img src="0.png" class="wp-img" alt="">
-      </div>
+<div class="wp-content" data-category="web" data-competition="CTFShow" data-challenge="Base64encode" data-difficulty="easy" data-date="2026-04-16">
+  <h1 class="wp-title">[Web] Base64encode</h1>
+  <div class="wp-meta">
+    <span>分类：Web 前端验证 / Base64 编码</span>
+    <span>难度：简单</span>
+    <span>时间：2026-04-16</span>
+  </div>
 
-      <div class="wp-section">
-        <h2>0x02 查看网页源代码</h2>
-        <p>F12查看源码，发现前端JavaScript密码校验逻辑：</p>
-        <pre>&lt;script&gt;
+  <div class="wp-section">
+    <h2>0x01 题目界面</h2>
+    <p>和前一题一样的登录界面</p>
+    <img src="0.png" class="wp-img" alt="">
+  </div>
+
+  <div class="wp-section">
+    <h2>0x02 查看源代码</h2>
+    <p>F12查看源码，发现前端JavaScript密码校验逻辑：</p>
+    <div class="ide"><pre>&lt;script&gt;
 document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -104,30 +41,38 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         messageElement.className = "message error";
     }
 });
-&lt;/script&gt;</pre>
-      </div>
+&lt;/script&gt;</pre></div>
+    <p>代码中 `btoa()` 为JavaScript原生Base64编码函数，将编码后的字符串解码：</p>
+    <div class="ide"><pre>编码字符串：Q1RGe2Vhc3lfYmFzZTY0fQ==
+解码结果：CTF{easy_base64}</pre></div>
+    <img src="1.png" class="wp-img" alt="">
+  </div>
 
-      <div class="wp-section">
-        <h2>0x03 Base64解码分析</h2>
-        <p>代码中 `btoa()` 为JavaScript原生Base64编码函数，将编码后的字符串解码：</p>
-        <pre>编码字符串：Q1RGe2Vhc3lfYmFzZTY0fQ==
-解码结果：CTF{easy_base64}</pre>
-        <img src="1.png" class="wp-img" alt="">
-      </div>
+  <div class="wp-section">
+    <h2>0x03 登录获取 Flag</h2>
+    <p>输入解码后的密码 CTF{easy_base64}，成功登录获取 Flag</p>
+    <img src="2.png" class="wp-img" alt="">
+  </div>
 
-      <div class="wp-section">
-        <h2>0x04 登录获取Flag</h2>
-        <p>将解码后的密码输入登录框，提交验证。</p>
-        <img src="2.png" class="wp-img" alt="">
-      </div>
-
-      <div class="wp-section">
-        <h2>0x05 Flag</h2>
-        <pre>CTF{easy_base64}</pre>
-      </div>
-
-    </div>
-  </main>
+  <div class="wp-section">
+    <h2>0x04 Flag</h2>
+    <div class="ide"><pre>CTF{easy_base64}</pre></div>
+  </div>
 </div>
+
+<script>
+document.querySelectorAll('.ide pre').forEach(pre => {
+  const lines = pre.textContent.split('\n')
+  pre.innerHTML = ''
+  lines.forEach((line, i) => {
+    const span = document.createElement('span')
+    span.className = 'line'
+    span.setAttribute('data-line', i + 1)
+    span.textContent = line
+    pre.appendChild(span)
+  })
+})
+</script>
+<script src="../../../../wp-script.js"></script>
 </body>
 </html>

