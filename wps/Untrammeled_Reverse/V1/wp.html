@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scheme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Reverse] State Machine Runtime Flag | WP</title>
+  <link rel="stylesheet" href="../../../../style.css">
+</head>
+<body>
+
+<div class="wp-content" data-category="reverse" data-competition="Custom CTF" data-challenge="Monolith V1" data-difficulty="hard" data-date="2026-04-28">
+  <h1 class="wp-title">[Reverse] Runtime State Machine 动态生成Flag</h1>
+  <div class="wp-meta">
+    <span>Reverse / State Machine / Runtime / ELF</span>
+    <span>难度：困难</span>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x01 题目初步分析</h2>
+    <p>运行 ELF 程序，输入任意内容：</p>
+    <div class="ide"><pre>echo test | ./monolith_v1</pre></div>
+    <p>输出为一串 0/1，比特流，没有任何 flag 信息。</p>
+    <p>说明：</p>
+    <p>flag 不在静态数据中，必须触发某种条件。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x02 静态分析</h2>
+    <p>使用 IDA / Ghidra 分析程序逻辑：</p>
+    <div class="ide"><pre>state = 0x1337;
+
+for(i=0;i&lt;len;i++){
+    state = mix(state, input[i]);
+
+    char b = state &amp; 1;
+    write(1, &amp;b, 1);
+}</pre></div>
+    <p>可以看出程序是一个典型的状态机（State Machine）。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x03 核心函数 mix</h2>
+    <div class="ide"><pre>uint32_t mix(uint32_t s, uint8_t x){
+    s ^= x;
+    s *= 0x45d9f3b;
+    s ^= s >> 16;
+    return s;
+}</pre></div>
+
+    <p>特点：</p>
+    <p>1. 非线性变换</p>
+    <p>2. 类似 hash / PRNG</p>
+    <p>3. 完全 deterministic</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x04 关键 Gate 条件</h2>
+    <p>继续向下分析发现：</p>
+    <div class="ide"><pre>if((state &amp; 0xfff0ffff) == 0x12340000){
+    gen_flag(state, flag);
+}</pre></div>
+
+    <p>这是整个题的核心：</p>
+    <p>必须构造输入，使最终 state 满足该条件。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x05 Flag 生成逻辑</h2>
+    <div class="ide"><pre>a = state ^ 0xdeadbeef
+b = mix(state, 0x42)
+c = mix(b, 0x99)</pre></div>
+
+    <p>最终拼接：</p>
+    <div class="ide"><pre>flag{ hex(a) + hex(b) + hex(c) }</pre></div>
+
+    <p>说明：</p>
+    <p>flag 是动态生成的，不存在于二进制中。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x06 解题思路</h2>
+    <p>问题转化为：</p>
+    <div class="ide"><pre>state_n = F(input)
+
+find input:
+(state_n &amp; mask) == target</pre></div>
+
+    <p>本质是逆向状态机。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x07 Python 求解</h2>
+    <div class="ide"><pre>def mix(s, x):
+    s ^= x
+    s = (s * 0x45d9f3b) &amp; 0xffffffff
+    s ^= s &gt;&gt; 16
+    return s
+
+def dfs(depth, state, path):
+    if depth == 8:
+        if (state &amp; 0xfff0ffff) == 0x12340000:
+            print("FOUND:", path)
+            return True
+        return False
+
+    for c in range(32, 127):
+        ns = mix(state, c)
+        if dfs(depth+1, ns, path + chr(c)):
+            return True
+
+dfs(0, 0x1337, "")</pre></div>
+
+    <p>运行后得到满足条件的输入。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x08 触发 Flag</h2>
+    <p>将求得输入喂给程序：</p>
+    <div class="ide"><pre>echo "INPUT" | ./monolith_v1</pre></div>
+
+    <p>输出：</p>
+    <div class="ide"><pre>010101010101...
+flag{xxxxxxxxxxxxxxxx}</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x09 最终结论</h2>
+    <p>本题不是传统 RE：</p>
+    <p>❌ 不存在硬编码 flag</p>
+    <p>❌ 无法 strings 提取</p>
+    <p>❌ 无法直接解密</p>
+
+    <p>而是：</p>
+    <p>✔ 构造输入驱动状态机</p>
+    <p>✔ 触发 runtime 条件</p>
+    <p>✔ 程序自行生成 flag</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x0A 总结</h2>
+    <p>核心考点：</p>
+    <p>1. 状态机建模</p>
+    <p>2. 输入驱动执行</p>
+    <p>3. runtime 条件控制</p>
+    <p>4. 动态 flag 生成</p>
+
+    <p><strong>一句话总结：</strong></p>
+    <p>这题的本质不是“找 flag”，而是“让程序自己生成 flag”。</p>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.ide pre').forEach(pre => {
+  const lines = pre.textContent.split('\n')
+  pre.innerHTML = ''
+  lines.forEach((line, i) => {
+    const span = document.createElement('span')
+    span.className = 'line'
+    span.setAttribute('data-line', i + 1)
+    span.textContent = line
+    pre.appendChild(span)
+  })
+})
+</script>
+
+<script src="../../../../wp-script.js"></script>
+</body>
+</html>
