@@ -15,6 +15,7 @@ const WP_LIST = [
   { title: "[Reverse] MOECTF2025 Catch", cat: "reverse", date: "2026-4-21", read: "4 min", path: "wps/moectf2025/reverse/catch/index.html", comp: "moectf2025" },
   { title: "[Reverse] MOECTF2025 UPX", cat: "reverse", date: "2026-4-23", read: "4 min", path: "wps/moectf2025/reverse/upx/index.html", comp: "moectf2025" },
   { title: "[Reverse] MOECTF2025 ez3", cat: "reverse", date: "2026-4-24", read: "4 min", path: "wps/moectf2025/reverse/ez3/index.html", comp: "moectf2025" },
+  { title: "[Cloud] CUHK25CTF Infinity_token", cat: "cloud", date: "2026-4-25", read: "3 min", path: "wps/CloudSec/cuhk.html", comp: "cuhk25ctf" },
 ];
 
 // ---------- Render articles with animations ----------

