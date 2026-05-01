@@ -51,6 +51,10 @@
           <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><rect x="3" y="4" width="18" height="4" rx="2"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
           <span>赛事Writeups</span>
         </a></li>
+        <li><a href="burp.html">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><rect x="3" y="4" width="18" height="4" rx="2"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+          <span>Burpsuite</span>
+        </a></li>
         <li id="dark-mode-toggle">
           <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-dark" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="8" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
           <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-light" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="16" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
@@ -74,9 +78,9 @@
       <div class="comp-selector">
         <button class="comp-btn active" data-comp="buuctf">BUUCTF</button>
         <button class="comp-btn" data-comp="ctfshow">CTFShow</button>
-        <button class="comp-btn" data-comp="moectf2025">HackTheBox</button>
+        <button class="comp-btn" data-comp="hackthebox">hacktheboxx</button>
         <button class="comp-btn" data-comp="moectf2025">Moectf2025</button>
-        <button class="comp-btn" data-comp="moectf2025">cuhkctf2025</button>
+        <button class="comp-btn" data-comp="cuhk25ctf">cuhk25ctf</button>
         <button class="comp-btn" data-comp="other">其他赛事（待更新）</button>
       </div>
 
@@ -114,6 +118,9 @@ const COMP_DATA = {
     { title: "[Web] CTFShow Base64编码隐藏", cat: "web", date: "2026-4-16", read: "2 min", path: "wps/web/ctfshow/Base64encode/index.html" },
     { title: "[Web] CTFShow HTTP头注入", cat: "web", date: "2026-4-16", read: "2 min", path: "wps/web/ctfshow/http头注入/index.html" }
   ],
+  "hackthebox": [
+    { title: "[Web] 尽请期待", cat: "reverse", date: "2026-4-21", read: "4 min", path: "wps/hackthebox/reverse/入门指北/index.html" },
+  ],
   "moectf2025": [
   { title: "[Reverse] MOECTF2025 Speed", cat: "reverse", date: "2026-4-18", read: "4 min", path: "wps/moectf2025/reverse/speed/index.html" },
   { title: "[Reverse] MOECTF2025 逆向工程入门指北", cat: "reverse", date: "2026-4-21", read: "4 min", path: "wps/moectf2025/reverse/入门指北/index.html" },
@@ -121,7 +128,7 @@ const COMP_DATA = {
   { title: "[Reverse] MOECTF2025 Catch", cat: "reverse", date: "2026-4-21", read: "4 min", path: "wps/moectf2025/reverse/catch/index.html" },
   { title: "[Reverse] MOECTF2025 UPX", cat: "reverse", date: "2026-4-23", read: "4 min", path: "wps/moectf2025/reverse/upx/index.html" },
   { title: "[Reverse] MOECTF2025 ez3", cat: "reverse", date: "2026-4-24", read: "4 min", path: "wps/moectf2025/reverse/ez3/index.html" },
-],
+  ],
  "cuhk25ctf": [
   { title: "[Cloud] CUHK25CTF Infinity_token", cat: "cloud", date: "2026-4-25", read: "3 min", path: "wps/CloudSec/cuhk.html" },
   ],
